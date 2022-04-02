@@ -138,7 +138,7 @@ void print_mat(double **matrix, int height, int width)
 
 void printsep()
 {
-  printf("----------\n");
+  printf("------------\n");
 }
 
 void assign_mat_to_mat(double **matrix, double **assign, int height, int width)

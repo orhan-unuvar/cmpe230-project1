@@ -19,6 +19,12 @@ void generate_new_code_string(Generator *generator)
     gen(generator, "#include <stdio.h>\n\nint main()\n{\n");
 }
 
+void generate_identifier(Generator *generator, char *str)
+{
+    gen(generator, "_");
+    gen(generator, str);
+}
+
 char *get_str(int val)
 {
     char *str = malloc(LINE_LIMIT * sizeof(char));
@@ -52,13 +58,13 @@ void generate_declaration_stmt(Generator *generator, ASTNode *node)
     if (node->var_type.var_type == TYPE_SCALAR)
     {
         gen(generator, "double ");
-        gen(generator, node->var_name);
+        generate_identifier(generator, node->var_name);
         gen(generator, "= 0;");
     }
     else if (node->var_type.var_type == TYPE_VECTOR)
     {
         gen(generator, "double **");
-        gen(generator, node->var_name);
+        generate_identifier(generator, node->var_name);
         gen(generator, " = allocate_matrix(");
         gen(generator, get_str(node->var_type.height));
         gen(generator, ", ");
@@ -68,7 +74,7 @@ void generate_declaration_stmt(Generator *generator, ASTNode *node)
     else if (node->var_type.var_type == TYPE_MATRIX)
     {
         gen(generator, "double **");
-        gen(generator, node->var_name);
+        generate_identifier(generator, node->var_name);
         gen(generator, " = allocate_matrix(");
         gen(generator, get_str(node->var_type.height));
         gen(generator, ", ");
@@ -83,7 +89,7 @@ void generate_assignment_stmt(Generator *generator, ASTNode *node)
     {
         ASTNode *list = node->rhs;
         gen(generator, "assign_to_mat(");
-        gen(generator, node->lhs->ident);
+        generate_identifier(generator, node->lhs->ident);
         gen(generator, ", ");
         gen(generator, get_str(list->exp_result_type.height));
         gen(generator, ", ");
@@ -104,7 +110,7 @@ void generate_assignment_stmt(Generator *generator, ASTNode *node)
         if (node->lhs->exp_type == EXP_IDENT && node->lhs->exp_result_type.var_type != TYPE_SCALAR)
         {
             gen(generator, "assign_mat_to_mat(");
-            gen(generator, node->lhs->ident);
+            generate_identifier(generator, node->lhs->ident);
             gen(generator, ", ");
             generate_expression(generator, node->rhs);
             gen(generator, ", ");
@@ -125,7 +131,7 @@ void generate_assignment_stmt(Generator *generator, ASTNode *node)
 
 void generate_assignment_dest(Generator *generator, ASTNode *node)
 {
-    gen(generator, node->ident);
+    generate_identifier(generator, node->ident);
     if (node->exp_type == EXP_INDEX)
     {
         gen(generator, "[get_int(");
@@ -191,7 +197,7 @@ void generate_expression(Generator *generator, ASTNode *node)
         gen(generator, "}");
         break;
     case EXP_IDENT:
-        gen(generator, node->ident);
+        generate_identifier(generator, node->ident);
         break;
     case EXP_BINOP:
         gen(generator, "(");
@@ -245,7 +251,7 @@ void generate_expression(Generator *generator, ASTNode *node)
         gen(generator, ")");
         break;
     case EXP_FUNC_CALL:
-        gen(generator, node->ident);
+        generate_identifier(generator, node->ident);
         gen(generator, "(");
         for (int i = 0; i < node->num_contents - 1; i++)
         {
@@ -263,7 +269,7 @@ void generate_expression(Generator *generator, ASTNode *node)
         gen(generator, ")");
         break;
     case EXP_INDEX:
-        gen(generator, node->ident);
+        generate_identifier(generator, node->ident);
         if (node->num_contents == 1)
         {
             gen(generator, "[get_int(");
@@ -314,16 +320,16 @@ void generate_for_clause(Generator *generator, ForLoopClause *for_clause)
 {
     char *var_name = for_clause->var->name;
     gen(generator, "for (");
-    gen(generator, var_name);
+    generate_identifier(generator, var_name);
     gen(generator, " = ");
     generate_expression(generator, for_clause->expr1);
     gen(generator, "; ");
     gen(generator, "get_int(");
-    gen(generator, var_name);
+    generate_identifier(generator, var_name);
     gen(generator, ") <= get_int(");
     generate_expression(generator, for_clause->expr2);
     gen(generator, "); ");
-    gen(generator, var_name);
+    generate_identifier(generator, var_name);
     gen(generator, " += ");
     generate_expression(generator, for_clause->expr3);
     gen(generator, ")");

@@ -11,6 +11,7 @@ matlang2c: $(c_files) $(objects) $(headers) $(others)
 
 matlang2c_dbg: $(objects) $(headers) $(others)
 	gcc -ggdb -o matlang2c matlang2c.c $(c_files)
+
 tests/test: $(objects) $(headers) $(others) tests/test.c tests/scanner-test.h tests/parser-test.h tests/exit-stub.h
 	gcc -ggdb -o tests/test tests/test.c $(c_files)
 

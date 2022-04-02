@@ -10,6 +10,7 @@ Generator *new_generator(ParseTree *tree);
 char *new_code_string(Generator *generator);
 char *get_str(int val);
 void gen(Generator *generator, char *string);
+void generate_identifier(Generator *generator, char *str);
 void generate_statement(Generator *generator, ASTNode *node);
 void generate_declaration_stmt(Generator *generator, ASTNode *node);
 void generate_assignment_stmt(Generator *generator, ASTNode *node);
