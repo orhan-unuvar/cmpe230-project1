@@ -13,7 +13,7 @@ run_test() {
         echo "Test $1 failed. Could not compile with matlang2c."
         exit 1
     fi
-    gcc -lm -ggdb ${1/mat/c} -o prog
+    gcc -ggdb ${1/mat/c} -lm -o prog
     if [[ $? -ne 0 ]]; then
         echo "Test $1 failed. Could not compile generated C code."
         exit 1
