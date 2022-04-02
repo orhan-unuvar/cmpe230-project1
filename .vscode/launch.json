@@ -7,10 +7,27 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Launch",
+      "name": "Debug Tests",
       "program": "${workspaceFolder}/tests/test",
       "args": [],
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build test",
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug Matlang2c",
+      "program": "${workspaceFolder}/matlang2c",
+      "args": ["${workspaceFolder}/test.mat"],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build matlang2c",
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug Compilation Test",
+      "program": "${workspaceFolder}/tests/compilation/prog",
+      "cwd": "${workspaceFolder}",
     }
   ]
 }

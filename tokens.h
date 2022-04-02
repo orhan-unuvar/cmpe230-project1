@@ -9,7 +9,6 @@ enum TokenType
   TKN_INT_LITERAL,
   TKN_FLOAT_LITERAL,
   // Punctuation
-  TKN_PN_DOT,
   TKN_PN_COMMA,
   TKN_PN_COLON,
   TKN_PN_OPENPAREN,

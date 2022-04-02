@@ -8,7 +8,6 @@ typedef enum ASTNodeType
   AST_STMT,
   AST_FOR_LOOP,
   AST_EXPR,
-  AST_ASSIGNMENT_DEST
 } ASTNodeType;
 
 typedef enum StatementType
@@ -46,8 +45,7 @@ typedef struct ForLoopClause
   struct ASTNode *expr1;
   struct ASTNode *expr2;
   struct ASTNode *expr3;
-}
-ForLoopClause;
+} ForLoopClause;
 
 typedef struct ASTNode
 {
@@ -55,12 +53,7 @@ typedef struct ASTNode
 
   StatementType stmt_type;
 
-  // AST_ASSIGNMENT_DEST
-  int is_indexed_assignment; // 0 if not indexed, 1 if indexed
-  int index_1;
-  int index_2; // Will always be 0 for vector destinations
-
-  // AST_DECL || AST_ASSIGNMENT_DEST
+  // AST_DECL
   char *var_name;
   ResultType var_type;
 
@@ -85,7 +78,7 @@ typedef struct ASTNode
 
   // If a node has multiple ASTNodes nested inside,
   // this is where they are stored
-  // AST_FOR_LOOP || AST_ROOT || EXP_INDEX || EXP_FUNC_CALL
+  // AST_FOR_LOOP || AST_ROOT || EXP_INDEX || EXP_FUNC_CALL || EXP_LIST
   struct ASTNode *contents;
   int num_contents;
 
@@ -109,7 +102,7 @@ typedef struct Parser
   int token_idx;
   int is_accepting_declarations;
   ParseTree *
-  parse_tree;
+      parse_tree;
 } Parser;
 
 ASTNode *new_ast_node(ASTNodeType type, int line_number);

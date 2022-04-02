@@ -20,6 +20,7 @@ void parse_challenge_9();
 void parse_fail_challenge_1();
 void parse_fail_challenge_2();
 void parse_fail_challenge_3();
+void parse_fail_challenge_4();
 int is_expr_with_type(ASTNode *node, ExpressionType exp_type);
 int is_literal_with_val(ASTNode *node, char *cts);
 int is_expr_with_result_type(ASTNode *node, ResultType type);
@@ -45,6 +46,8 @@ void run_parser_tests()
   parse_fail_challenge_2();
   reset_exit_stub();
   parse_fail_challenge_3();
+  reset_exit_stub();
+  parse_fail_challenge_4();
   reset_exit_stub();
   printf("Parser tests passed!\n");
 }
@@ -100,7 +103,9 @@ void parse_challenge_4()
 
   assert(cts[1].type == AST_STMT);
   assert(cts[1].stmt_type == STMT_ASSIGNMENT);
-  assert(cts[1].lhs->type == AST_ASSIGNMENT_DEST);
+  assert(cts[1].lhs->type == AST_EXPR);
+  assert(cts[1].lhs->exp_type == EXP_IDENT);
+  assert(strcmp(cts[1].lhs->ident, "A") == 0);
   assert(cts[1].rhs->type == AST_EXPR);
   assert(cts[1].rhs->exp_type == EXP_LIST);
 
@@ -288,6 +293,27 @@ void parse_fail_challenge_3()
   assert(return_val == 1);
 }
 
+void parse_fail_challenge_4()
+{
+  char *challenge = "#variable defintitons\n\
+  vector z[3]\n\
+  vector y[4]\n\
+  matrix a[2, 2]\n\
+  matrix b[2, 3]\n\
+  z = a *b *y\n\
+  ";
+
+  should_exit = 1;
+  done = 0;
+  expected_code = 1;
+  int return_val = 0;
+  if (!(return_val = setjmp(jump_env)))
+  {
+    parse_return_root(challenge);
+  }
+  assert(return_val == 1);
+}
+
 int is_expr_with_type(ASTNode *node, ExpressionType exp_type)
 {
   if (node->type != AST_EXPR)
@@ -312,12 +338,12 @@ int is_decl_with_type_and_name(ASTNode *node, ResultType type, char *name)
 }
 int is_list_assignment(ASTNode *node, char *destination_ident, char **expected_contents)
 {
-  int is_list_type = node->stmt_type == STMT_ASSIGNMENT && node->lhs->type == AST_ASSIGNMENT_DEST && node->rhs->type == AST_EXPR && node->rhs->exp_type == EXP_LIST;
+  int is_list_type = node->stmt_type == STMT_ASSIGNMENT && node->lhs->type == AST_EXPR && node->rhs->type == AST_EXPR && node->rhs->exp_type == EXP_LIST;
   if (!is_list_type)
     return 0;
-  if (strcmp(node->lhs->var_name, destination_ident) != 0)
+  if (strcmp(node->lhs->ident, destination_ident) != 0)
     return 0;
-  if (node->lhs->var_type.var_type == TYPE_SCALAR)
+  if (node->lhs->exp_result_type.var_type == TYPE_SCALAR)
   {
     // This should never happen if we are type-checking
     printf("Error: List assignment to scalar\n");

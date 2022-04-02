@@ -1,13 +1,16 @@
+#pragma once
 #include <math.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #define ___EPSILON 0.000000001
 
 double **allocate_matrix(int size_1, int size_2)
 {
-  double **result = calloc(size_1, sizeof(double *));
+  double **result = (double **)calloc(size_1, sizeof(double *));
   for (int o = 0; o < size_1; o++)
   {
-    result[o] = calloc(size_2, sizeof(double));
+    result[o] = (double *)calloc(size_2, sizeof(double));
   }
 
   return result;
@@ -57,10 +60,10 @@ double **mat_mul(double **mat1, int h1, int w1, double **mat2, int h2, int w2)
   {
     for (int j = 0; j < w2; j++)
     {
-      int sum = 0;
+      double sum = 0;
       for (int k = 0; k < w1; k++)
       {
-        sum += mat1[i][k] * mat2[k][i];
+        sum += mat1[i][k] * mat2[k][j];
       }
       result[i][j] = sum;
     }
@@ -97,7 +100,7 @@ double **tr(double **mat, int h, int w)
 
 double choose(double expr1, double expr2, double expr3, double expr4)
 {
-  if (abs(expr1) < ___EPSILON)
+  if (fabs(expr1) < ___EPSILON)
   {
     return expr2;
   }
@@ -109,21 +112,56 @@ double choose(double expr1, double expr2, double expr3, double expr4)
   {
     return expr4;
   }
+  return expr2;
 }
-
 void print(double number)
 {
-  if (abs(number - round(number)) < ___EPSILON)
+  if (fabs(number - round(number)) < ___EPSILON)
   {
-    printf("%d\n", round(number));
+    printf("%d\n", (int)round(number));
   }
   else
   {
     printf("%f\n", number);
   }
 }
+void print_mat(double **matrix, int height, int width)
+{
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      print(matrix[i][j]);
+    }
+  }
+}
 
 void printsep()
 {
   printf("----------\n");
+}
+
+void assign_mat_to_mat(double **matrix, double **assign, int height, int width)
+{
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      matrix[i][j] = assign[i][j];
+    }
+  }
+}
+
+void assign_to_mat(double **matrix, int height, int width, ...)
+{
+  va_list args;
+  va_start(args, width);
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      matrix[i][j] = va_arg(args, double);
+    }
+  }
+  va_end(args);
 }

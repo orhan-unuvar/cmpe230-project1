@@ -57,7 +57,10 @@
     "__string": "cpp",
     "scanner-test.h": "c",
     "iosfwd": "c",
-    "exit-stub.h": "c"
+    "exit-stub.h": "c",
+    "code-gen.h": "c",
+    "preamble.h": "c"
   },
-  "C_Cpp.errorSquiggles": "Enabled"
+  "C_Cpp.errorSquiggles": "Enabled",
+  "python.formatting.provider": "black"
 }

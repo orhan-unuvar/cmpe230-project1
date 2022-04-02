@@ -107,6 +107,14 @@ static int match(Parser *parser, TokenType type)
   return 0;
 }
 
+static int check(Parser *parser, TokenType type)
+{
+  if (get_curr(parser)->type == type)
+  {
+    return 1;
+  }
+  return 0;
+}
 static void advance_to_next_line(Parser *parser)
 {
   while (!is_eof(parser) && get_curr(parser)->type != TKN_LINE_FEED)
@@ -201,7 +209,7 @@ ASTNode *parse_for_loop_statement(Parser *parser)
     // Doubly nested for loop
     match_or_error(parser, TKN_IDENT, "Expected identifier after ',' in 'for' loop expression.");
     char *ident2 = peek_prev(parser)->contents;
-    Variable *var2 = lookup_variable(parser->parse_tree->symbol_table, ident1);
+    Variable *var2 = lookup_variable(parser->parse_tree->symbol_table, ident2);
     if (var2 == NULL)
     {
       char error_msg[100];
@@ -317,6 +325,7 @@ ASTNode *parse_statement(Parser *parser)
   else
   {
     parser_exit_with_error(parser, "Unexpected token when trying to parse statement.");
+    return NULL;
   }
 }
 
@@ -356,18 +365,19 @@ ASTNode *parse_assignment(Parser *parser)
   ASTNode *lhs = parse_assignment_dest(parser);
   match_or_error(parser, TKN_ASSIGN, "Expected '=' after identifier");
   node->lhs = lhs;
+  ResultType variable_type = lhs->exp_result_type;
 
   // Optionally parse list expression
   if (match(parser, TKN_PN_OPENBRACE))
   {
     go_back(parser);
-    ASTNode *list_expr = parse_list_expression(parser, lhs->var_type);
+    ASTNode *list_expr = parse_list_expression(parser, variable_type);
     node->rhs = list_expr;
   }
   else
   {
     ASTNode *rhs = parse_expression(parser);
-    if ((lhs->var_type.var_type == TYPE_SCALAR ^ rhs->exp_result_type.var_type == TYPE_SCALAR) || lhs->var_type.height != rhs->exp_result_type.height || lhs->var_type.width != rhs->exp_result_type.width)
+    if ((variable_type.var_type == TYPE_SCALAR ^ rhs->exp_result_type.var_type == TYPE_SCALAR) || variable_type.height != rhs->exp_result_type.height || variable_type.width != rhs->exp_result_type.width)
     {
       parser_exit_with_error(parser, "Type mismatch in assignment.");
     }
@@ -603,6 +613,13 @@ ASTNode *parse_atomic(Parser *parser)
         parser_exit_with_error(parser, "Argument list ended before expected number of arguments");
       }
       contents[idx] = *parse_expression(parser);
+      if (func_token_type == TKN_FUNCTION_SQRT || func_token_type == TKN_FUNCTION_CHOOSE)
+      {
+        if (contents[idx].exp_result_type.var_type != TYPE_SCALAR)
+        {
+          parser_exit_with_error(parser, "Argument to function must be a scalar");
+        }
+      }
       idx++;
       if (idx < arg_count)
       {
@@ -614,10 +631,12 @@ ASTNode *parse_atomic(Parser *parser)
     func_call->exp_type = EXP_FUNC_CALL;
     func_call->exp_result_type = get_func_call_result_type(parser, func_token_type, contents);
     func_call->num_contents = arg_count;
+    func_call->contents = contents;
     func_call->ident = strdup(func_token->contents);
     return func_call;
   }
   parser_exit_with_error(parser, "Unexpected token when looking for a factor");
+  return NULL;
 }
 
 ResultType get_func_call_result_type(Parser *parser, TokenType func_tok, ASTNode *contents)
@@ -723,46 +742,65 @@ ResultType get_operation_result_type(Parser *parser, OperatorType op_type, Resul
   return result_type;
 }
 
+// Returns EXP_INDEX or EXP_IDENT
 ASTNode *parse_assignment_dest(Parser *parser)
 {
-  ASTNode *dest = new_ast_node(AST_ASSIGNMENT_DEST, get_curr(parser)->line_num);
+  ASTNode *dest = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
   // Should not print error
   match_or_error(parser, TKN_IDENT, "Expected an identifier for assignment (Internal error).");
-  dest->var_name = peek_prev(parser)->contents;
-  Variable *var = lookup_variable(parser->parse_tree->symbol_table, dest->var_name);
+  dest->ident = strdup(peek_prev(parser)->contents);
+  Variable *var = lookup_variable(parser->parse_tree->symbol_table, dest->ident);
   if (var == NULL)
   {
     char error_msg[100];
     snprintf(error_msg, 100, "Variable '%s' not declared.", dest->var_name);
     parser_exit_with_error(parser, error_msg);
   }
-  dest->var_type = var->type;
-  dest->is_indexed_assignment = 0;
+  dest->exp_result_type = var->type;
 
   if (match(parser, TKN_PN_OPENBRACKET))
   {
     // Assigning to an index
-    dest->is_indexed_assignment = 1;
+    dest->exp_type = EXP_INDEX;
 
     if (var->type.var_type == TYPE_SCALAR)
       parser_exit_with_error(parser, "Expected a vector or matrix for indexing but got a scalar.");
 
-    match_or_error(parser, TKN_INT_LITERAL, "Expected an integer when indexing on the left side of an assignment.");
-    dest->index_1 = atoi(peek_prev(parser)->contents);
+    ASTNode *index1 = parse_expression(parser);
+    if (index1->exp_result_type.var_type != TYPE_SCALAR)
+    {
+      parser_exit_with_error(parser, "Expected a scalar for indexing.");
+    }
 
     if (var->type.var_type == TYPE_VECTOR)
     {
-      dest->index_2 = 0;
+
       match_or_error(parser, TKN_PN_CLOSEBRACKET, "Expected a closing bracket after the first index for a vector.");
+      dest->contents = index1;
+      dest->num_contents = 1;
       return dest;
     }
-    match_or_error(parser, TKN_PN_COMMA, "Expected a comma after an integer when indexing a matrix on the left side of an assignment.");
+    match_or_error(parser, TKN_PN_COMMA, "Expected a comma after an expression when indexing a matrix on the left side of an assignment.");
 
-    match_or_error(parser, TKN_INT_LITERAL, "Expected a second index when indexing a matrix on the left side of an assignment.");
+    ASTNode *index2 = parse_expression(parser);
+    if (index1->exp_result_type.var_type != TYPE_SCALAR)
+    {
+      parser_exit_with_error(parser, "Expected a scalar for indexing.");
+    }
 
-    dest->index_2 = atoi(peek_prev(parser)->contents);
+    match_or_error(parser, TKN_PN_CLOSEBRACKET, "Expected a closing bracket after the second index for a matrix.");
+
+    dest->contents = calloc(2, sizeof(ASTNode));
+    dest->contents[0] = *index1;
+    dest->contents[1] = *index2;
+    dest->num_contents = 2;
+    return dest;
   }
-  return dest;
+  else
+  {
+    dest->exp_type = EXP_IDENT;
+    return dest;
+  }
 }
 
 ASTNode *parse_list_expression(Parser *parser, ResultType type)

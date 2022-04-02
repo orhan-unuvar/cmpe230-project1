@@ -1,18 +1,15 @@
 #pragma once
-#include <parser.h>
-
-typedef struct {
+#include "parser.h"
+typedef struct
+{
     ParseTree *tree;
     char *code_string;
-    int current; //current place in the code string
-}
-Generator;
+} Generator;
 
-extern char *preamble;
 Generator *new_generator(ParseTree *tree);
-char *new_code_string();
+char *new_code_string(Generator *generator);
 char *get_str(int val);
-void generate_str(Generator *generator, char *string);
+void gen(Generator *generator, char *string);
 void generate_statement(Generator *generator, ASTNode *node);
 void generate_declaration_stmt(Generator *generator, ASTNode *node);
 void generate_assignment_stmt(Generator *generator, ASTNode *node);

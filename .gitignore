@@ -4,3 +4,5 @@ tests/test.dSYM
 
 *.o
 **/*.o
+*.dSYM
+test.c

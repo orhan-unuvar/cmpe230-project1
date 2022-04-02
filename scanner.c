@@ -92,7 +92,6 @@ Token *get_tokens_from_file(char *filename)
   while (fgets(line, LINE_LIMIT, fp) != NULL)
   {
     strcat(contents, line);
-    strcat(contents, "\n");
     line_num++;
   }
   fclose(fp);
@@ -122,11 +121,14 @@ Token *get_tokens_with_scanner(Scanner *scanner)
   while (scanner->pos < scanner->len)
   {
     Token *token = get_token_from_scanner(scanner);
-    if (!token)
-      break;
+
     if (token->type == TKN_LINE_FEED)
     {
       scanner->line_num++;
+    }
+    if (token->type == TKN_EOF)
+    {
+      break;
     }
     tokens[tokens_index] = *token;
     free(token);
@@ -140,13 +142,19 @@ Token *get_tokens_with_scanner(Scanner *scanner)
 Token *get_token_from_scanner(Scanner *scanner)
 {
   char c = advance_chr(scanner);
+  if (c == '\0')
+    return new_token(TKN_EOF, strdup(""), scanner->line_num);
   int is_in_comment = 0;
-  while (c)
+  while (1)
   {
     if (is_in_comment)
     {
-      if (c == '\n' || c == '\0')
-        is_in_comment = 0;
+      if (c == '\n')
+        return new_token(TKN_LINE_FEED, strdup("\n"), scanner->line_num);
+      else if (c == '\0')
+      {
+        return new_token(TKN_EOF, strdup(""), scanner->line_num);
+      }
       else
       {
         c = advance_chr(scanner);
@@ -178,9 +186,11 @@ Token *get_token_from_scanner(Scanner *scanner)
       return new_token(TKN_PN_COLON, strdup(":"), scanner->line_num);
     case '=':
       return new_token(TKN_ASSIGN, strdup("="), scanner->line_num);
+    case '\0':
+      return new_token(TKN_EOF, strdup(""), scanner->line_num);
     case '#':
       is_in_comment = 1;
-      continue;
+      break;
     default:
       if (isalpha(c) || c == '_')
       {
@@ -200,10 +210,9 @@ Token *get_token_from_scanner(Scanner *scanner)
       }
     }
 
-    // In case we got whitespace, keep on scanning
+    // In case we got whitespace or we're inside a comment, keep on scanning
     c = advance_chr(scanner);
   }
-  return NULL;
 }
 
 Token *get_identifier_or_keyword_from_scanner(Scanner *scanner)
