@@ -1,4 +1,4 @@
-c_files = parser.c scanner.c symbol-table.c tokens.c
+c_files = parser.c scanner.c symbol-table.c tokens.c generator.c
 
 objects = $(c_files:.c=.o)
 

@@ -535,6 +535,7 @@ ASTNode *parse_atomic(Parser *parser)
       }
       ASTNode *expr1 = parse_expression(parser);
       ASTNode *index_expr = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
+      index_expr->ident = strdup(var->name);
       index_expr->exp_type = EXP_INDEX;
       // Index always returns scalar
       index_expr->exp_result_type = (ResultType){.var_type = TYPE_SCALAR, .height = 1, .width = 1};

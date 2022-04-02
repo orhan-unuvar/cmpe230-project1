@@ -70,7 +70,7 @@ typedef struct ASTNode
   // EXP_LITERAL
   char *literal_str;
 
-  // EXP_IDENT
+  // EXP_IDENT || EXP_FUNC_CALL || EXP_INDEX
   char *ident;
 
   // EXP_BINOP
@@ -108,7 +108,8 @@ typedef struct Parser
   Token *tokens;
   int token_idx;
   int is_accepting_declarations;
-  ParseTree *parse_tree;
+  ParseTree *
+  parse_tree;
 } Parser;
 
 ASTNode *new_ast_node(ASTNodeType type, int line_number);

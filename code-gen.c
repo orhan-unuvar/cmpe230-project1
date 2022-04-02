@@ -1,4 +1,4 @@
-#include <generator.h>
+#include <code-gen.h>
 #include <defs.h>
 #include <string.h>
 
@@ -25,6 +25,11 @@ char *get_str(int val)
     char str[LINE_LIMIT];
     sprintf(str, "%d", val);
     return str;
+}
+
+void generate_str(Generator *generator, char *string)
+{
+    strcat(generator->code_string, string);
 }
 
 void generate_statement(Generator *generator, ASTNode *node)
@@ -82,12 +87,29 @@ void generate_assignment_stmt(Generator *generator, ASTNode *node)
 
 void generate_assignment_dest(Generator *generator, ASTNode *node)
 {
-
+    generate_str(generator, node->var_name);
+    if (node->is_indexed_assignment)
+    {
+        generate_str(generator, "[");
+        generate_str(generator, node->index_1 - 1); /* might also be expression */
+        generate_str(generator, "][");
+        if (node->index_2)
+        {
+            generate_str(generator, node->index_2 - 1); /* might also be expression */
+        }
+        else
+        {
+            generate_str(generator, "0");
+        }
+        generate_str(generator, "]");
+    }
 }
 
 void generate_print_stmt(Generator *generator, ASTNode *node)
 {
-
+    generate_str(generator, "print(");
+    generate_expression(generator, node->contents);
+    generate_str(generator, ");");
 }
 
 void generate_expression(Generator *generator, ASTNode *node)
@@ -162,18 +184,31 @@ void generate_expression(Generator *generator, ASTNode *node)
             generate_str(generator, ")");
             break;
         case EXP_FUNC_CALL:
-            switch (expression)
+            generate_str(generator, node->ident);
+            generate_str(generator, "(");
+            for (int i = 0; i < node->num_contents - 1; i++)
             {
-            case /* constant-expression */:
-                /* code */
-                break;
-            
-            default:
-                break;
-            } ()
-            break;
+                generate_str(generator, &node->contents[i]);
+                generate_str(generator, ",");
+            }
+            generate_str(generator, &node->contents[node->num_contents - 1]);
+            generate_str(generator, ")");
         case EXP_INDEX:
-            
+            generate_str(generator, node->ident);
+            if (node->num_contents == 1)
+            {
+                generate_str(generator, "[get_int(");
+                generate_expression(generator, node->contents);
+                generate_str(generator, ") - 1][0]");
+            }
+            else if (node->num_contents == 2)
+            {
+                generate_str(generator, "[get_int(");
+                generate_expression(generator, node->contents);
+                generate_str(generator, ") - 1][get_int(");
+                generate_expression(generator, &node->contents[1]);
+                generate_expression(generator, ") - 1]");
+            }
             break;
     }
 }
@@ -181,29 +216,48 @@ void generate_expression(Generator *generator, ASTNode *node)
 void generate_for_loop(Generator *generator, ASTNode *node)
 {
     generate_str(generator, "\t");
-    generate_for_header(generator, node);
-    generate_str(generator, "\n");
+    generate_for_clause(generator, node->for_clause_1);
+    generate_str(generator, "\n{\n");
+    if (node->for_clause_2 != NULL)
+    {
+        generate_str(generator, "\t\t");
+        generate_for_clause(generator, node->for_clause_2);
+        generate_str(generator, "\n{\n");
+    }
     for (int i = 0 ; i < node->num_contents ; i++)
     {
         generate_str(generator, "\t\t");
+        if (node->for_clause_2 != NULL)
+        {
+            generate_str(generator, "\t");
+        }
         generate_statement(generator, node);
         generate_str(generator, "\n");
     }
+    if (node->for_clause_2 != NULL)
+    {
+        generate_str(generator, "\t\t}\n");
+    }
+    generate_str(generator, "\t}\n");
 }
 
-void generate_for_header(Generator *generator, ASTNode *node)
+void generate_for_clause(Generator *generator, ForLoopClause *for_clause)
 {
-
-}
-
-void generate_str(Generator *generator, char *string)
-{
-    strcat(generator->code_string, string);
-}
-
-void generate_identifier(Generator *generator, ASTNode *node)
-{
-    strcat(generator->code_string, node->ident);
+    char *var_name = for_clause->var->name;
+    generate_str(generator, "for (");
+    generate_str(generator, var_name);
+    generate_str(generator, " = ");
+    generate_expression(generator, for_clause->expr1);
+    generate_str(generator, "; ");
+    generate_str(generator, "get_int(");
+    generate_str(generator, var_name);
+    generate_str(generator, ") <= get(");
+    generate_expression(generator, for_clause->expr2);
+    generate_str(generator, "); ");
+    generate_str(generator, var_name);
+    generate_str(generator, " += ");
+    generate_expression(generator, for_clause->expr3);
+    generate_str(generator, ")");
 }
 
 void generate_mat_add_sub(Generator *generator, ASTNode *mat1, ASTNode *mat2, char *func_name)
@@ -258,28 +312,19 @@ void generate_sca_mul(Generator *generator, ASTNode *mat, ASTNode *sca)
     generate_str(generator, ")");
 }
 
-void generate_code_string(Generator *generator, ParseTree *tree)
+void generate_code_string(Generator *generator)
 {
-    for (int i = 0 ; i < tree->root->num_contents ; ++i)
+    ASTNode *root = generator->tree->root;
+    for (int i = 0; i < root->num_contents; i++)
     {
-        traverse_and_generate(&tree->root->contents[i], generator);
-    }
-}
-
-void traverse_and_generate(Generator *generator, ASTNode *node)
-{
-    switch (node->type)
-    {
+        switch (root->contents[i].type)
+        {
         case AST_STMT:
             generate_str(generator, "\t");
-            generate_statement(generator, node);
+            generate_statement(generator, &root->contents[i]);
             generate_str(generator, "\n");
         case AST_FOR_LOOP:
-            generate_str(generator, "\t");
-            generate_for_loop(generator, node);
-    }       
-    for (int i = 0 ; i < node->num_contents ; ++i)
-    {
-        traverse_and_generate(&node->contents[i], generator);
+            generate_for_loop(generator, &root->contents[i]);
+        }  
     }
 }
