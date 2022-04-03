@@ -2,7 +2,9 @@ matlang2c
 tests/test
 tests/test.dSYM
 
+.DS_Store
 *.o
 **/*.o
 *.dSYM
 test.c
+*.entitlements
