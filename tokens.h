@@ -44,8 +44,8 @@ typedef enum TokenType TokenType;
 struct Token
 {
   TokenType type;
-  char *contents;
   int line_num;
+  char *contents;
 };
 
 typedef struct Token Token;

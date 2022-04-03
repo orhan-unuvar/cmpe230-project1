@@ -115,7 +115,7 @@ Scanner *scan_str(char *str)
 
 Token *get_tokens_with_scanner(Scanner *scanner)
 {
-  Token *tokens = calloc(LINE_LIMIT * LINE_LIMIT, sizeof(Token));
+  Token *tokens = calloc(strlen(scanner->contents), sizeof(Token));
   int tokens_index = 0;
 
   while (scanner->pos < scanner->len)
