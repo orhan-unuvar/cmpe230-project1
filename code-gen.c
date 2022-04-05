@@ -251,7 +251,7 @@ void generate_expression(Generator *generator, ASTNode *node)
         gen(generator, ")");
         break;
     case EXP_FUNC_CALL:
-        generate_identifier(generator, node->ident);
+        gen(generator, node->ident);
         gen(generator, "(");
         for (int i = 0; i < node->num_contents - 1; i++)
         {
