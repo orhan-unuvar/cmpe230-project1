@@ -1,0 +1,5 @@
+matrix a[2,3]
+matrix b[3,2]
+matrix c[2,2]
+
+c = tr(a) * b

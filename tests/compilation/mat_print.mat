@@ -1,0 +1,9 @@
+matrix A[3,2]
+vector C[2]
+
+A = { 1 1.2 2 2 3.5 3 }
+C = { 9 8 }
+
+print(A)
+printsep()
+print(C)

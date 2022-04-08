@@ -1,0 +1,4 @@
+vector v[5]
+matrix m[4, 5]
+
+m[2] = v

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+
 #include "defs.h"
 #include "tokens.h"
 #include "parser.h"
@@ -377,10 +378,16 @@ ASTNode *parse_assignment(Parser *parser)
   else
   {
     ASTNode *rhs = parse_expression(parser);
-    if ((variable_type.var_type == TYPE_SCALAR ^ rhs->exp_result_type.var_type == TYPE_SCALAR) || variable_type.height != rhs->exp_result_type.height || variable_type.width != rhs->exp_result_type.width)
+    if (lhs->exp_type == EXP_INDEX)
+    {
+      if (rhs->exp_result_type.var_type != TYPE_SCALAR)
+        parser_exit_with_error(parser, "Type mismatch in assignment.");
+    }
+    else if ((variable_type.var_type == TYPE_SCALAR ^ rhs->exp_result_type.var_type == TYPE_SCALAR) || variable_type.height != rhs->exp_result_type.height || variable_type.width != rhs->exp_result_type.width)
     {
       parser_exit_with_error(parser, "Type mismatch in assignment.");
     }
+
     node->rhs = rhs;
   }
 
@@ -886,6 +893,11 @@ OperatorType get_op_type(TokenType type)
 
 static void parser_exit_with_error(Parser *parser, char *message)
 {
-  printf("Error: (Line %d) %s\n", get_curr(parser)->line_num, message);
+  if (SUPPRESS_ALL_ERRS)
+    exit(1);
+  if (ERR_DETAIL)
+    printf("Error: (Line %d) %s\n", get_curr(parser)->line_num, message);
+  else
+    printf("Error (Line %d)\n", get_curr(parser)->line_num);
   exit(1);
 }

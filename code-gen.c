@@ -147,12 +147,17 @@ void generate_assignment_dest(Generator *generator, ASTNode *node)
     {
         gen(generator, "[get_int(");
         generate_expression(generator, node->contents);
-        gen(generator, ")]");
+        gen(generator, ") - 1]");
+        // TODO: this is wrong! for vectors we need the second index to be 0.
         if (node->num_contents == 2)
         {
-            gen(generator, "[gen_int(");
+            gen(generator, "[get_int(");
             generate_expression(generator, &node->contents[1]);
-            gen(generator, ")]");
+            gen(generator, ") - 1]");
+        }
+        else
+        {
+            gen(generator, "[0]");
         }
     }
 }

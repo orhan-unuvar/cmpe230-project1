@@ -370,5 +370,10 @@ int is_keyword(char *a)
 
 static void scanner_exit_with_error(Scanner *scanner, char *error_msg)
 {
-  printf("Error (Line %d): %s\n", scanner->line_num, error_msg);
+  if (SUPPRESS_ALL_ERRS)
+    exit(1);
+  if (ERR_DETAIL)
+    printf("Error (Line %d): %s\n", scanner->line_num, error_msg);
+  else
+    printf("Error (Line %d)\n", scanner->line_num);
 }

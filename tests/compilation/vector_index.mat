@@ -1,0 +1,9 @@
+vector _dsajdlkas[32]
+_dsajdlkas[14] = 2
+
+print(_dsajdlkas[14])
+
+_dsajdlkas[32] = 1342.32
+print(_dsajdlkas[32])
+
+print(_dsajdlkas[1])

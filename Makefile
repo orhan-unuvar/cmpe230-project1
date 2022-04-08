@@ -1,4 +1,4 @@
-c_files = parser.c scanner.c symbol-table.c tokens.c code-gen.c
+c_files = parser.c scanner.c symbol-table.c tokens.c code-gen.c defs.c
 
 objects = $(c_files:.c=.o)
 
@@ -15,8 +15,7 @@ matlang2c_dbg: $(objects) $(headers) $(others)
 tests/test: $(objects) $(headers) $(others) tests/test.c tests/scanner-test.h tests/parser-test.h tests/exit-stub.h
 	gcc -ggdb -o tests/test tests/test.c $(c_files)
 
-test: tests/test
-	./tests/test
-	./tests/compilation/run_tests.bash
+test: matlang2c tests/test
+	./tests/test.bash
 
 .PHONY: test matlang2c_dbg

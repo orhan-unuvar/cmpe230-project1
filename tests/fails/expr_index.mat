@@ -1,0 +1,5 @@
+scalar A
+matrix B[1,2]
+
+B = { 1 1 }
+A = (B*tr(B))[1,1]

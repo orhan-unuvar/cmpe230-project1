@@ -1,0 +1,6 @@
+# variable definitions
+vector z[3]
+vector y[4]
+matrix A[2,2]
+matrix B[2,3]
+z = A*B*y

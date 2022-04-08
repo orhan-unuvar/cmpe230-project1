@@ -1,0 +1,6 @@
+matrix A[1,2]
+matrix B[1,2]
+A = { 1 1 }
+B = A
+A[1,1] = 2
+print(B[1,1])

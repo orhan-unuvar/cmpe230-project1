@@ -1,0 +1,3 @@
+matrix A[1,2]
+scalar B
+B = choose(A,A,A,A)

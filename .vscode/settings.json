@@ -59,7 +59,8 @@
     "iosfwd": "c",
     "exit-stub.h": "c",
     "code-gen.h": "c",
-    "preamble.h": "c"
+    "preamble.h": "c",
+    "defs.h": "c"
   },
   "C_Cpp.errorSquiggles": "Enabled",
   "python.formatting.provider": "black"

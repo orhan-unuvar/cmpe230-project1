@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "exit-stub.h"
+#include "../defs.h"
 #include "../tokens.h"
 #include "../scanner.h"
 #include "../parser.h"
@@ -41,6 +42,7 @@ void run_parser_tests()
   parse_challenge_8();
   parse_challenge_9();
   reset_exit_stub();
+  SUPPRESS_ALL_ERRS = 1;
   parse_fail_challenge_1();
   reset_exit_stub();
   parse_fail_challenge_2();
@@ -48,6 +50,7 @@ void run_parser_tests()
   parse_fail_challenge_3();
   reset_exit_stub();
   parse_fail_challenge_4();
+  SUPPRESS_ALL_ERRS = 0;
   reset_exit_stub();
   printf("Parser tests passed!\n");
 }

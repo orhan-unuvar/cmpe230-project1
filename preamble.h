@@ -114,25 +114,33 @@ double choose(double expr1, double expr2, double expr3, double expr4)
   }
   return expr2;
 }
-void print(double number)
+void print_num(double number)
 {
   if (fabs(number - round(number)) < ___EPSILON)
   {
-    printf("%d\n", (int)round(number));
+    printf("%d", (int)round(number));
   }
   else
   {
-    printf("%f\n", number);
+    printf("%f", number);
   }
+}
+void print(double number)
+{
+  print_num(number);
+  printf("\n");
 }
 void print_mat(double **matrix, int height, int width)
 {
   for (int i = 0; i < height; i++)
   {
-    for (int j = 0; j < width; j++)
+    for (int j = 0; j < width - 1; j++)
     {
-      print(matrix[i][j]);
+      print_num(matrix[i][j]);
+      printf(" ");
     }
+    print_num(matrix[i][width - 1]);
+    printf("\n");
   }
 }
 

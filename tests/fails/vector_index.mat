@@ -1,0 +1,4 @@
+matrix A[3,2]
+matrix row[1,2]
+
+row = A[1]
