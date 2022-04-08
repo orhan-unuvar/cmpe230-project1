@@ -4,6 +4,8 @@ typedef struct
 {
     ParseTree *tree;
     char *code_string;
+    int capacity;
+    int length;
 } Generator;
 
 Generator *new_generator(ParseTree *tree);

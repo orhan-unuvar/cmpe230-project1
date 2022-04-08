@@ -1,4 +1,5 @@
 *.c
+test1.c
 preamble.h
 prog
 *.py

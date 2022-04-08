@@ -9,7 +9,11 @@ Generator *new_generator(ParseTree *tree)
 {
     Generator *generator = calloc(1, sizeof(Generator));
     generator->tree = tree;
-    generator->code_string = calloc(1, 10 * LINE_LIMIT * LINE_LIMIT); // not sure
+
+    generator->code_string = calloc(1, 100);
+    generator->capacity = 100;
+    generator->length = 0;
+
     return generator;
 }
 
@@ -21,7 +25,6 @@ void generate_new_code_string(Generator *generator)
 
 void generate_identifier(Generator *generator, char *str)
 {
-    gen(generator, "_");
     gen(generator, str);
 }
 
@@ -34,6 +37,14 @@ char *get_str(int val)
 
 void gen(Generator *generator, char *str)
 {
+
+    int len = strlen(str);
+    if (len + generator->length + 1 > generator->capacity)
+    {
+        generator->capacity *= 2;
+        generator->code_string = realloc(generator->code_string, generator->capacity);
+    }
+    generator->length += len;
     strcat(generator->code_string, str);
 }
 

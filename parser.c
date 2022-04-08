@@ -809,11 +809,15 @@ ASTNode *parse_list_expression(Parser *parser, ResultType type)
   list_node->exp_type = EXP_LIST;
   list_node->exp_result_type = type;
 
-  ASTNode *contents = calloc(256, sizeof(ASTNode));
+  ASTNode *contents = calloc(type.width * type.height, sizeof(ASTNode));
   match_or_error(parser, TKN_PN_OPENBRACE, "Expected '{' for list expression");
   int idx = 0;
   while (match(parser, TKN_INT_LITERAL) || match(parser, TKN_FLOAT_LITERAL))
   {
+    if (idx >= type.width * type.height)
+    {
+      parser_exit_with_error(parser, "Received too many list elements.");
+    }
     ASTNode *literal_node = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
     literal_node->exp_type = EXP_LITERAL;
     literal_node->exp_result_type = (ResultType){.var_type = TYPE_SCALAR, .height = 1, .width = 1};
