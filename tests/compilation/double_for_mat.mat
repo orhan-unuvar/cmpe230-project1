@@ -1,0 +1,8 @@
+matrix A[24,63]
+scalar i
+scalar j
+
+for (i,j in 1:24:2,1:63:3) {
+  A[i,j] = i*j
+}
+print(A)

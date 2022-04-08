@@ -1,0 +1,8 @@
+scalar a
+scalar b
+
+a = 10
+b = 20
+
+a = a + a*b
+print(a)
