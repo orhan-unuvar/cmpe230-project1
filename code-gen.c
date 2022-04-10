@@ -4,7 +4,7 @@
 #include "defs.h"
 
 char *preamble = "#include \"preamble.h\"\n";
-
+// Creates a new code generator from parse tree.
 Generator *new_generator(ParseTree *tree)
 {
     Generator *generator = calloc(1, sizeof(Generator));
@@ -16,7 +16,7 @@ Generator *new_generator(ParseTree *tree)
 
     return generator;
 }
-
+//
 void generate_new_code_string(Generator *generator)
 {
     gen(generator, preamble);
