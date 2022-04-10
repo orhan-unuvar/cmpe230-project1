@@ -733,21 +733,11 @@ ResultType get_operation_result_type(Parser *parser, OperatorType op_type, Resul
     {
       result_type.var_type = TYPE_SCALAR;
     }
-    else if (lhs.var_type == TYPE_VECTOR && rhs.var_type == TYPE_VECTOR)
-    {
-      if (lhs.height != rhs.height)
-      {
-        parser_exit_with_error(parser, "Expected vectors of equal length in vector addition/subtraction.");
-      }
-      result_type.var_type = TYPE_VECTOR;
-      result_type.height = lhs.height;
-      result_type.width = 1;
-    }
-    else if (lhs.var_type == TYPE_MATRIX && rhs.var_type == TYPE_MATRIX)
+    else if (lhs.var_type != TYPE_SCALAR && rhs.var_type != TYPE_SCALAR)
     {
       if (lhs.height != rhs.height || lhs.width != rhs.width)
       {
-        parser_exit_with_error(parser, "Expected matrices of equal size in matrix addition/subtraction.");
+        parser_exit_with_error(parser, "Expected matrices or vectors of equal size in matrix addition/subtraction.");
       }
       result_type.var_type = TYPE_MATRIX;
       result_type.height = lhs.height;

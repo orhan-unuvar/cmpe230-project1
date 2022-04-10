@@ -250,7 +250,7 @@ void generate_expression(Generator *generator, ASTNode *node)
             {
                 if (node->rhs->exp_result_type.var_type == TYPE_MATRIX || node->rhs->exp_result_type.var_type == TYPE_VECTOR)
                 {
-                    generate_mat_mul(generator, node->rhs, node->lhs);
+                    generate_sca_mul(generator, node->rhs, node->lhs);
                 }
                 else if (node->rhs->exp_result_type.var_type == TYPE_SCALAR)
                 {
