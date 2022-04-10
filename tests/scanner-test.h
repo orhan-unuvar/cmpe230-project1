@@ -23,7 +23,7 @@ void run_scanner_tests()
 
 void scan_challenge_1()
 {
-  char *challenge_1 = "scalar a";
+  char *challenge_1 = "\t\tscalar a";
 
   Scanner *scanner = scan_str(challenge_1);
 
@@ -36,7 +36,7 @@ void scan_challenge_1()
 
 void scan_challenge_2()
 {
-  char *challenge_1 = "for (   _i in 5: 3:  321) {\n";
+  char *challenge_1 = "for ( \t\t _i in 5: 3:  321) {\n";
 
   Scanner *scanner = scan_str(challenge_1);
 
@@ -75,7 +75,7 @@ void scan_challenge_2()
 
 void scan_challenge_3()
 {
-  char *challenge_1 = "A={0.5 0.5 0 10}\n";
+  char *challenge_1 = "\tA={0.5 0.5\t 0 10}\n";
 
   Scanner *scanner = scan_str(challenge_1);
 

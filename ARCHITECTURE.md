@@ -41,7 +41,7 @@ Some important functions from `scanner.c` are the following:
 1. get_tokens_from_scanner
 1. get_token_with_scanner
 
-The function named `get_tokens_from_scanner()` linearly traverses the source code string `contents` and calls functions that look like the function in the pseudocode above.
+The function named `get_tokens_from_scanner()` linearly traverses the source code string `contents` and calls functions that look like the function `SCAN_NUMERAL` in the pseudocode above. Each `SCAN_NUMERAL` like function scans a word-like piece (like an identifier, or a parenthesis, or a MatLang keyword) from the source code by using functions like `peek_curr_chr` and à
 
 ## Parser
 
@@ -167,7 +167,7 @@ does a depth first traversal of the parse tree passed on from the parser,
 and generates the target C code along the way.
 
 The Generator struct that represents the code generator has a pointer both
-to a `ParseTree tree` and `char [] code_string`. The `code_string` array is
+to a `ParseTree tree` and `char code_string[]`. The `code_string` array is
 dynamic (as in the sense of a dynamic array), it starts at a length of 100
 characters and expands only when its capacity is reached.
 

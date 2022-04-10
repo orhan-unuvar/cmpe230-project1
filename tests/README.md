@@ -20,9 +20,9 @@ We run some simple cases and check if the returned parse tree is correct or not.
 
 ## Compilation/Fail Tests
 
-We have 2 bash scripts in the folder `compilation` and `fails`, called `run_tests.bash`. These scripts loop over all `.mat` files in the directory and verify the behavior of our program.
+We have 2 bash scripts in the folders `compilation` and `fails`, called `run_tests.bash`. These scripts loop over all `.mat` files in the directory and verify the behavior of our program.
 
-### Behavior of `compilation/run_tests`
+### Behavior of `compilation/run_tests.bash`
 
 1. Loop over all `.mat` files
 1. Compile the `.mat` file to C
@@ -31,7 +31,7 @@ We have 2 bash scripts in the folder `compilation` and `fails`, called `run_test
 
 During these steps, we catch any error from gcc or matlang2c and print it to the tester. If any error is caught, we exit with code 1.
 
-### Behavior of `fails/run_tests`
+### Behavior of `fails/run_tests.bash`
 
 1. Loop over all `.mat` files
 1. Run `matlang2c` with the `.mat` file
