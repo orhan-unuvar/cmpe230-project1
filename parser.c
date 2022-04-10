@@ -312,7 +312,7 @@ ASTNode *parse_for_loop_statement(Parser *parser)
   {
     parser_exit_with_error(parser, "Expected ':' or 'in' after identifier in 'for' loop expression.");
   }
-  match_lf_eof_or_error(parser, "Expected '\n' after for statement."); // is eof valid here???
+  match_lf_eof_or_error(parser, "Expected '\n' after for statement.");
   skip_newlines(parser);
   while (get_curr(parser)->type != TKN_PN_CLOSEBRACE && !is_eof(parser))
   {
@@ -549,7 +549,7 @@ ASTNode *parse_factor(Parser *parser)
   {
     Token *op = peek_prev(parser);
     OperatorType type = get_op_type(op->type);
-    ASTNode *rhs = parse_atomic(parser); // shouldn't this be parse_atomic?
+    ASTNode *rhs = parse_atomic(parser);
     ASTNode *parent = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
 
     parent->exp_type = EXP_BINOP;
@@ -557,7 +557,7 @@ ASTNode *parse_factor(Parser *parser)
     parent->lhs = expr;
     parent->rhs = rhs;
     parent->exp_result_type = get_operation_result_type(parser, type, parent->lhs->exp_result_type, parent->rhs->exp_result_type);
-    expr = parent; // what is this?
+    expr = parent;
   }
 
   return expr;
@@ -653,7 +653,6 @@ ASTNode *parse_atomic(Parser *parser)
     {
       if (get_curr(parser)->type == TKN_PN_CLOSEPAREN)
       {
-        // Provide better error message in this case.
         parser_exit_with_error(parser, "Argument list ended before expected number of arguments");
       }
       contents[idx] = *parse_expression(parser);
