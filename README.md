@@ -42,7 +42,10 @@ Example command:
 gcc prog.c -lm -o prog
 ```
 
-## More
+## Next Steps
+
+The docs don't end here. We have docpages explaining our testing suite and the
+code structure. Please check them out.
 
 For test documentation, check [test docs](tests/README.md) out.
 

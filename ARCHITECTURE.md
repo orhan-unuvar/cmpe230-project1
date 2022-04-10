@@ -10,11 +10,21 @@ The MatLang2C Transpiler (referred to as ML2C from here after on), consists of 3
 2. The syntax analyzer, or parser
 3. Target code generator
 
-When ML2C starts running on a given .mat file input, the scanner _scans_ the characters that exists in the .mat file, and _glues_ them together to make sensible parts called **tokens**. Then these tokens are passed onto the next component of ML2C, the parser. The parser checks for any possible syntactical or semantical mistakes (such as type compatibility) in the token sequence, and also structures the tokens in an **abstract syntax tree (AST)** to make code generation easier. Finally, the code generator _generates_ C code for an existing C compiler to translate further and produce an executable.
+When ML2C starts running on a given .mat file input, the scanner _scans_ the
+characters that exists in the .mat file, and _glues_ them together to make
+sensible parts called **tokens**. Then these tokens are passed onto the next
+component of ML2C, the parser. The parser checks for any possible syntactical or
+semantical mistakes (such as type compatibility) in the token sequence, and also
+structures the tokens in an **abstract syntax tree (AST)** to make code
+generation easier. Finally, the code generator _generates_ C code for an
+existing C compiler to translate further and produce an executable.
 
 ## Scanner
 
-The first major component of ML2C, the scanner, simply does a linear traversal of the input MatLang source code and forms tokens out of the characters according to the lexical grammar of the MatLang language. An example of this for integer and float numerals:
+The first major component of ML2C, the scanner, simply does a linear traversal
+of the input MatLang source code and forms tokens out of the characters
+according to the lexical grammar of the MatLang language. An example of this for
+integer and float numerals:
 
     define SCAN_NUMERAL
         let tk be a new token
@@ -31,21 +41,46 @@ The first major component of ML2C, the scanner, simply does a linear traversal o
         label tk as TOKEN_NUMERAL
         return tk
 
-An important point is that the scanner holds a list of all the keywords of the MatLang language, such as `for`, `vector`, and `printsep`, so whenever it comes across these words in the input, it labels the created token accordingly.
+An important point is that the scanner holds a list of all the keywords of the
+MatLang language, such as `for`, `vector`, and `printsep`, so whenever it comes
+across these words in the input, it labels the created token accordingly.
 
-The scanner is implemented with a struct appropriately called `Scanner`, that is defined in `scanner.h` and used in `scanner.c`. This struct has a pointer both to the source code `char *contents` and the scanned tokens list `Token *scanned_tokens`, and also carries extra information such as the current line number, the current character position in the source code, and the total length of source code.
+The scanner is implemented with a struct appropriately called `Scanner`, that is
+defined in `scanner.h` and used in `scanner.c`. This struct has a pointer both
+to the source code `char *contents` and the scanned tokens list
+`Token *scanned_tokens`, and also carries extra information such as the current line
+number, the current character position in the source code, and the total length
+of source code.
 
 Some important functions from `scanner.c` are the following:
 
-1. get_tokens_from_file
-1. get_tokens_from_scanner
-1. get_token_with_scanner
+1. `get_tokens_from_file()`
+1. `get_tokens_from_scanner()`
+1. `get_token_with_scanner()`
 
-The function named `get_tokens_from_scanner()` linearly traverses the source code string `contents` and calls functions that look like the function `SCAN_NUMERAL` in the pseudocode above. Each `SCAN_NUMERAL` like function scans a word-like piece (like an identifier, or a parenthesis, or a MatLang keyword) from the source code by using functions like `peek_curr_chr` and à
+The function named `get_tokens_from_scanner()` linearly traverses the source
+code string `contents` and calls functions that look like the function
+`SCAN_NUMERAL` in the pseudocode above. Each `SCAN_NUMERAL` like function scans
+a word-like piece (like an identifier, or a parenthesis, or a MatLang keyword)
+from the source code by using functions like `peek_prev_chr()` and `advance_chr()`.
 
 ## Parser
 
-Second major component of ML2C, the parser, takes the list of all tokens created from the input and _parses_ it. It checks for any errors in the way tokens follow each other, and reorganizes them into a structure more representative of the meaning of the input program, called an abstract syntax tree (AST) or parse tree<sup>1</sup>. It does this according to the _syntactic_ (structure of definitions and statements) and _semantic_ (type compatibility of expressions) grammar of the MatLang language. Instead of tokens, the parse tree consists of objects called **nodes**. These are objects that generally represent bigger pieces of the input program (for example an AST node may represent a whole `for` loop), and they carry pointers to nodes that represent their subpieces (a `NODE_FOR_LOOP` will carry a pointer to a `NODE_ONE_LINE_STMT` for each substatement in the program loop). Expression nodes also carry data type information for type-checking. To take a look at how the parser works, let's see how a sequence of tokens that arrives from the scanner may be formed into a little parse subtree:
+Second major component of ML2C, the parser, takes the list of all tokens created
+from the input and _parses_ it. It checks for any errors in the way tokens
+follow each other, and reorganizes them into a structure more representative of
+the meaning of the input program, called an abstract syntax tree (AST) or parse
+tree<sup>1</sup>. It does this according to the _syntactic_ (structure of
+definitions and statements) and _semantic_ (type compatibility of expressions)
+grammar of the MatLang language. Instead of tokens, the parse tree consists of
+objects called **nodes**. These are objects that generally represent bigger
+pieces of the input program (for example an AST node may represent a whole `for`
+loop), and they carry pointers to nodes that represent their subpieces (a
+`NODE_FOR_LOOP` will carry a pointer to a `NODE_ONE_LINE_STMT` for each
+substatement in the program loop). Expression nodes also carry data type
+information for type-checking. To take a look at how the parser works, let's see
+how a sequence of tokens that arrives from the scanner may be formed into a
+little parse subtree:
 
     define PARSE_FOR_LOOP
         let nd be a new node
@@ -80,9 +115,16 @@ Second major component of ML2C, the parser, takes the list of all tokens created
                 call PARSE_ONE_LINE_STMT and add to nd
         return nd
 
-Two important things to observe here: First of all, any error that is comed across in the subpieces of the `for` loop such as the clause expressions or the substatements will be generated in the subcalls to functions that parse these pieces. Secondly, any time one of these subcalls returns, they return with their corresponding nodes, and then pointers to these nodes are added into the original `for` node.
+Two important things to observe here: First of all, any error that is comed
+across in the subpieces of the `for` loop such as the clause expressions or the
+substatements will be generated in the subcalls to functions that parse these
+pieces. Secondly, any time one of these subcalls returns, they return with their
+corresponding nodes, and then pointers to these nodes are added into the
+original `for` node.
 
-For another example, let's look at how summation expressions are parsed, so we can see how operator precedence, associativity and type info synthesis are handled at once:
+For another example, let's look at how summation expressions are parsed, so we
+can see how operator precedence, associativity and type info synthesis are
+handled at once:
 
     define PARSE_SUM
         call PARSE_PRODUCT and let it be lnd
@@ -135,41 +177,38 @@ For another example, let's look at how summation expressions are parsed, so we c
         else //meaningless expression
             exit with error message
 
-As you can see, the precedence is handled by the layerization of
-precedence
-levels with different functions. Whenever the parse enters a place where
-it expects a sequence of tokens that make up a meaningful expression, it
-recursively descends into first a sum expression, then a product
-expression, and finally an atomic expression (which can be either a
-parenthesized arbitrary expression, an indexing expression, a single
-identifier expression, a single numeral expression, or a function call
-expression). The whole expression may be only an atomic expression, or a
-bunch of products of atomic expressions, or even a bunch of sums of
-products of atomic expressions!
+As you can see, the precedence is handled by the layerization of precedence
+levels with different functions. Whenever the parse enters a place where it
+expects a sequence of tokens that make up a meaningful expression, it
+recursively descends into first a sum expression, then a product expression, and
+finally an atomic expression (which can be either a parenthesized arbitrary
+expression, an indexing expression, a single identifier expression, a single
+numeral expression, or a function call expression). The whole expression may be
+only an atomic expression, or a bunch of products of atomic expressions, or even
+a bunch of sums of products of atomic expressions!
 
-Associativity is also easy, it is simply
-achieved by the line `let lnd be snd` in the above pseudocode. What this
-allows is that whenever the `while` loop iterates over to add in another
-summation operator (that is `+` or `-`) to the expression, it takes the
-previous sum node `snd` and stores it as the left node `lnd` of the next
-sum node.
+Associativity is also easy, it is simply achieved by the line `let lnd be snd`
+in the above pseudocode. What this allows is that whenever the `while` loop
+iterates over to add in another summation operator (that is `+` or `-`) to the
+expression, it takes the previous sum node `snd` and stores it as the left node
+`lnd` of the next sum node.
 
 Finally the type info synthesis is achieved by a simple type check (that
-includes the height and width checks for vectors and matrices) on the
-left and right nodes that are already parsed, which is followed by an
-assignment of type info on the sum node.
+includes the height and width checks for vectors and matrices) on the left and
+right nodes that are already parsed, which is followed by an assignment of type
+info on the sum node.
 
 ## Code Generator
 
-The final component of ML2C, target code generation, is where all the work
-done by the scanner and parser gives its fruit. The code generator simply
-does a depth first traversal of the parse tree passed on from the parser,
-and generates the target C code along the way.
+The final component of ML2C, target code generation, is where all the work done
+by the scanner and parser gives its fruit. The code generator simply does a
+depth first traversal of the parse tree passed on from the parser, and generates
+the target C code along the way.
 
-The Generator struct that represents the code generator has a pointer both
-to a `ParseTree tree` and `char code_string[]`. The `code_string` array is
-dynamic (as in the sense of a dynamic array), it starts at a length of 100
-characters and expands only when its capacity is reached.
+The Generator struct that represents the code generator has a pointer both to a
+`ParseTree tree` and `char code_string[]`. The `code_string` array is dynamic
+(as in the sense of a dynamic array), it starts at a length of 100 characters
+and expands only when its capacity is reached.
 
 Here's an example of how the generator works for variable definitions:
 
@@ -187,20 +226,20 @@ Here's an example of how the generator works for variable definitions:
             GENERATE (nd.width)
             GENERATE (");")
 
-As you can see, both vector and matrices are implemented as double pointers
-in ML2C. Also, since C does not have a function to copy 2-dimensional by
-default, it is implemented as a custom defined function `allocate_matrix()`. Observe by the way how type information about nodes can be get readily
-since they were already synthesized in the parsing phase.
+As you can see, both vector and matrices are implemented as double pointers in
+ML2C. Also, since C does not have a function to copy 2-dimensional by default,
+it is implemented as a custom defined function `allocate_matrix()`. Observe by
+the way how type information about nodes can be get readily since they were
+already synthesized in the parsing phase.
 
 ## The Preamble
 
-Since MatLang introduces functions and operations which do not belong to C
-by default, such as `tr`, `choose`, or `matrix multiplication` (which is
-actually overloaded into the operator `*`), ML2C implements a list of
-custom defined functions that achieves the desired behavior. This list of
-custom defined functions is stored in a header called `preamble.h`, so
-there is a `#include "preamble.h"` instruction at the the start of every
-ML2C output program.
+Since MatLang introduces functions and operations which do not belong to C by
+default, such as `tr`, `choose`, or `matrix multiplication` (which is actually
+overloaded into the operator `*`), ML2C implements a list of custom defined
+functions that achieves the desired behavior. This list of custom defined
+functions is stored in a header called `preamble.h`, so there is a
+`#include "preamble.h"` instruction at the the start of every ML2C output program.
 
 | Warning | Our preamble definitions are required for the output file to compile. |
 | ------: | --------------------------------------------------------------------- |
@@ -229,6 +268,10 @@ Here's a list of functions that exist in `preamble.h`:
 1. `printsep()`
 1. `get_int(double scalar)`
 
-<sup>1</sup>The word "parse tree" actually refers to something little different than an abstract syntax tree in the literature, but for the workings and purposes of ML2C, this distinction is irrelevant.
+Almost all of these functions are self-explaining, except maybe the function `assign_to_mat()`, which is in fact a variadic function (a function that takes an arbitrary number of arguments) that assigns vector and matrix literals to vector and matrix variables. The reason that the function is variadic is because re-assignment to arrays in C is not possible, so the literal vectors and matrices are given as multiple scalar arguments.
+
+<sup>1</sup>The word "parse tree" actually refers to something little different
+than an abstract syntax tree in the literature, but for the workings and
+purposes of ML2C, this distinction is irrelevant.
 
 </div>
