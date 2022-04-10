@@ -116,6 +116,7 @@ static int check(Parser *parser, TokenType type)
   }
   return 0;
 }
+
 static void advance_to_next_line(Parser *parser)
 {
   while (!is_eof(parser) && get_curr(parser)->type != TKN_LINE_FEED)
@@ -289,11 +290,11 @@ ASTNode *parse_for_loop_statement(Parser *parser)
   {
     parser_exit_with_error(parser, "Expected ':' or 'in' after identifier in 'for' loop expression.");
   }
-  match_lf_eof_or_error(parser, "Expected '\n' after for statement.");
+  match_lf_eof_or_error(parser, "Expected '\n' after for statement."); //is eof valid here???
   while (get_curr(parser)->type != TKN_PN_CLOSEBRACE && !is_eof(parser))
   {
     ASTNode *statement = parse_statement(parser);
-    if (statement != NULL)
+    if (statement != NULL) //how can this be ever null?
     {
       add_child(node, *statement);
     }
@@ -516,7 +517,7 @@ ASTNode *parse_factor(Parser *parser)
   {
     Token *op = peek_prev(parser);
     OperatorType type = get_op_type(op->type);
-    ASTNode *rhs = parse_factor(parser);
+    ASTNode *rhs = parse_factor(parser); //shouldn't this be parse_atomic?
     ASTNode *parent = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
 
     parent->exp_type = EXP_BINOP;
@@ -524,7 +525,7 @@ ASTNode *parse_factor(Parser *parser)
     parent->lhs = expr;
     parent->rhs = rhs;
     parent->exp_result_type = get_operation_result_type(parser, type, parent->lhs->exp_result_type, parent->rhs->exp_result_type);
-    expr = parent;
+    expr = parent; //what is this?
   }
 
   return expr;
