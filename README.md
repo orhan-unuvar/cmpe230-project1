@@ -165,11 +165,11 @@ define PARSE_ATOMIC
             if next token is not TOKEN_CLOSE_BRACKET
                 exit with error message
         else return NODE_ID from t
-    else if next token is TOKEN_FUNC
+    else if next token is TOKEN_FUNC_CALL
     ...
 </pre>
 
-As you can see, the precedence is handled by the layerization of precedence levels with different functions, that is 
+As you can see, the precedence is handled by the layerization of precedence levels with different functions. Whenever the parse enters a place where it expects a sequence of tokens that make up a meaningful expression, it recursively descends into first a sum expression, then a product expression, and finally an atomic expression
 
 ### Code Generator
 
