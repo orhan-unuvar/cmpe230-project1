@@ -9,6 +9,7 @@
 // Internal error means errors that shouldnt be reachable
 // due to checks that SHOULD'VE happened before getting to that point.
 
+// Initializes a new ASTNode with a given line number
 ASTNode *new_ast_node(ASTNodeType type, int line_number)
 {
   ASTNode *node = calloc(1, sizeof(ASTNode));
@@ -19,6 +20,7 @@ ASTNode *new_ast_node(ASTNodeType type, int line_number)
   return node;
 }
 
+// Initializes a new parse tree
 ParseTree *new_parse_tree()
 {
   ParseTree *tree = malloc(sizeof(ParseTree));
@@ -27,6 +29,7 @@ ParseTree *new_parse_tree()
   return tree;
 }
 
+// Initializes a new parser
 Parser *new_parser(Token *tokenList)
 {
   Parser *parser = calloc(1, sizeof(Parser));
@@ -37,16 +40,19 @@ Parser *new_parser(Token *tokenList)
   return parser;
 }
 
+// Gets the current token in the parser
 static Token *get_curr(Parser *parser)
 {
   return &parser->tokens[parser->token_idx];
 }
 
+// Checks whether we've reached the end of the token stream
 int is_eof(Parser *parser)
 {
   return (get_curr(parser)->type == TKN_EOF);
 }
 
+// Goes one token forward
 static Token *advance(Parser *parser)
 {
   if (is_eof(parser))
@@ -57,6 +63,7 @@ static Token *advance(Parser *parser)
   return peek_prev(parser);
 }
 
+// Goes one token back
 static Token *go_back(Parser *parser)
 {
   if (parser->token_idx == 0)
@@ -67,6 +74,7 @@ static Token *go_back(Parser *parser)
   return peek_next(parser);
 }
 
+// Goes n tokens back
 static Token *go_backn(Parser *parser, int n)
 {
   if (parser->token_idx < n)
@@ -80,6 +88,7 @@ static Token *go_backn(Parser *parser, int n)
   return prev;
 }
 
+// Returns the next token without moving the parser head
 static Token *peek_next(Parser *parser)
 {
   if (is_eof(parser))
@@ -89,6 +98,7 @@ static Token *peek_next(Parser *parser)
   return &parser->tokens[parser->token_idx + 1];
 }
 
+// Returns the previous token without moving the parser head
 static Token *peek_prev(Parser *parser)
 {
   if (parser->token_idx == 0)
@@ -98,6 +108,7 @@ static Token *peek_prev(Parser *parser)
   return &parser->tokens[parser->token_idx - 1];
 }
 
+// Returns 1 and advances if the current token is of the given type
 static int match(Parser *parser, TokenType type)
 {
   if (get_curr(parser)->type == type)
@@ -108,15 +119,7 @@ static int match(Parser *parser, TokenType type)
   return 0;
 }
 
-static int check(Parser *parser, TokenType type)
-{
-  if (get_curr(parser)->type == type)
-  {
-    return 1;
-  }
-  return 0;
-}
-
+// Ignores every non-line-feed token and advances the past to the next line
 static void advance_to_next_line(Parser *parser)
 {
   while (!is_eof(parser) && get_curr(parser)->type != TKN_LINE_FEED)
@@ -130,6 +133,7 @@ static void advance_to_next_line(Parser *parser)
   }
 }
 
+// Skips all newline tokens
 static void skip_newlines(Parser *parser)
 {
   while (get_curr(parser)->type == TKN_LINE_FEED)
@@ -138,6 +142,7 @@ static void skip_newlines(Parser *parser)
   }
 }
 
+// Expect to match LF or EOF, exit with error otherwise
 static void match_lf_eof_or_error(Parser *parser, char *err)
 {
   if (!match(parser, TKN_EOF) && !match(parser, TKN_LINE_FEED))
@@ -146,6 +151,7 @@ static void match_lf_eof_or_error(Parser *parser, char *err)
   }
 }
 
+// Expect to match given token type, exit with error otherwise
 static void match_or_error(Parser *parser, TokenType type, char *err)
 {
   if (!match(parser, type))
@@ -154,6 +160,7 @@ static void match_or_error(Parser *parser, TokenType type, char *err)
   }
 }
 
+// Entry point for the parser, returns an ASTNode with type AST_ROOT
 ASTNode *parse_root(Parser *parser, ASTNode *root)
 {
   root->contents = calloc(LINE_LIMIT, sizeof(ASTNode));
@@ -187,6 +194,8 @@ ASTNode *parse_root(Parser *parser, ASTNode *root)
   return root;
 }
 
+// Parses a for loop statement and returns an ASTNode with type AST_FOR_LOOP
+// It also parses the statements within and appends them to the `contents`
 ASTNode *parse_for_loop_statement(Parser *parser)
 {
   ASTNode *node = new_ast_node(AST_FOR_LOOP, get_curr(parser)->line_num);
@@ -205,6 +214,7 @@ ASTNode *parse_for_loop_statement(Parser *parser)
     snprintf(error_msg, 100, "Variable '%s' not declared in 'for' loop expression.", ident1);
     parser_exit_with_error(parser, error_msg);
   }
+
   if (var1->type.var_type != TYPE_SCALAR)
   {
     char error_msg[100];
@@ -224,6 +234,7 @@ ASTNode *parse_for_loop_statement(Parser *parser)
       snprintf(error_msg, 100, "Variable '%s' not declared in 'for' loop expression.", ident1);
       parser_exit_with_error(parser, error_msg);
     }
+
     if (var2->type.var_type != TYPE_SCALAR)
     {
       char error_msg[100];
@@ -258,7 +269,6 @@ ASTNode *parse_for_loop_statement(Parser *parser)
     ASTNode *expr6 = parse_expression(parser);
     ForLoopClause *clause2 = calloc(1, sizeof(ForLoopClause));
     clause2->var = var2;
-    // TODO: should we type-check here?
     clause2->expr1 = expr4;
     clause2->expr2 = expr5;
     clause2->expr3 = expr6;
@@ -303,6 +313,7 @@ ASTNode *parse_for_loop_statement(Parser *parser)
     parser_exit_with_error(parser, "Expected ':' or 'in' after identifier in 'for' loop expression.");
   }
   match_lf_eof_or_error(parser, "Expected '\n' after for statement."); // is eof valid here???
+  skip_newlines(parser);
   while (get_curr(parser)->type != TKN_PN_CLOSEBRACE && !is_eof(parser))
   {
     skip_newlines(parser);
@@ -316,6 +327,7 @@ ASTNode *parse_for_loop_statement(Parser *parser)
   return node;
 }
 
+// Parses a single statement and returns an ASTNode with type AST_STMT.
 ASTNode *parse_statement(Parser *parser)
 {
   if (match(parser, TKN_IDENT))
@@ -344,12 +356,12 @@ ASTNode *parse_statement(Parser *parser)
   }
 }
 
+// Parses a print statement and returns an ASTNode with type AST_PRINT.
 ASTNode *parse_print_statement(Parser *parser)
 {
 
   ASTNode *node = new_ast_node(AST_STMT, get_curr(parser)->line_num);
-  node->stmt_type = STMT_PRINT_STMT;
-  // TODO: Continue
+  node->stmt_type = STMT_PRINT;
   if (match(parser, TKN_SPECIAL_PRINT))
   {
     match_or_error(parser, TKN_PN_OPENPAREN, "Expected '(' after print keyword");
@@ -372,11 +384,12 @@ ASTNode *parse_print_statement(Parser *parser)
   return node;
 }
 
+// Parses a STMT_ASSN
 ASTNode *parse_assignment(Parser *parser)
 {
   ASTNode *node = new_ast_node(AST_STMT, get_curr(parser)->line_num);
 
-  node->stmt_type = STMT_ASSIGNMENT;
+  node->stmt_type = STMT_ASSN;
   ASTNode *lhs = parse_assignment_dest(parser);
   match_or_error(parser, TKN_ASSIGN, "Expected '=' after identifier");
   node->lhs = lhs;
@@ -409,6 +422,7 @@ ASTNode *parse_assignment(Parser *parser)
   return node;
 }
 
+// Parses a STMT_DECL
 ASTNode *parse_declaration(Parser *parser)
 {
   ASTNode *node = new_ast_node(AST_STMT, get_curr(parser)->line_num);
@@ -439,8 +453,8 @@ ASTNode *parse_declaration(Parser *parser)
   return node;
 }
 
-// Returns where it started
-// Validates the declaration as well as parsing the type
+// Validates the declaration and parses the type of the variable.
+// Puts the parser head back into the position it started in.
 ResultType parse_var_type(Parser *parser)
 {
   // Guaranteed to not be undefined since we checked that the token is a type
@@ -493,6 +507,7 @@ ResultType parse_var_type(Parser *parser)
   return type;
 }
 
+// Parses an AST_EXPR
 // Does NOT parse list expressions
 // List expressions are only parsed on the immediate RHS of an assignment
 ASTNode *parse_expression(Parser *parser)
@@ -500,6 +515,8 @@ ASTNode *parse_expression(Parser *parser)
   return parse_term(parser);
 }
 
+// Recursive descent function for parsing an expression
+// Parses a "term" and appends other terms when encountering operators (+ and -)
 ASTNode *parse_term(Parser *parser)
 {
   ASTNode *expr = parse_factor(parser);
@@ -522,6 +539,8 @@ ASTNode *parse_term(Parser *parser)
   return expr;
 }
 
+// Recursive descent function for parsing an expression
+// Parses a "factor" and appends other factors when encountering operators (*)
 ASTNode *parse_factor(Parser *parser)
 {
   ASTNode *expr = parse_atomic(parser);
@@ -544,6 +563,12 @@ ASTNode *parse_factor(Parser *parser)
   return expr;
 }
 
+// Recursive descent function for parsing an expression
+// Parses an "atomic" which can be an identifier, literal or
+// the highest priority operators:
+// - Parenthesis
+// - Indexing
+// - Function call
 ASTNode *parse_atomic(Parser *parser)
 {
   if (match(parser, TKN_PN_OPENPAREN))
@@ -576,21 +601,19 @@ ASTNode *parse_atomic(Parser *parser)
 
         index_expr->contents = expr1;
         index_expr->num_contents = 1;
-
-        return index_expr;
       }
-      // Type is Matrix
-      match_or_error(parser, TKN_PN_COMMA, "Expected a comma after the first expression in a matrix index expression");
+      else
+      {
+        // Type is Matrix
+        match_or_error(parser, TKN_PN_COMMA, "Expected a comma after the first expression in a matrix index expression");
 
-      ASTNode *expr2 = parse_expression(parser);
-      match_or_error(parser, TKN_PN_CLOSEBRACKET, "Expected ']' after expression for index expression into matrix.");
-      index_expr->contents = calloc(2, sizeof(ASTNode));
-      index_expr->contents[0] = *expr1;
-      index_expr->contents[1] = *expr2;
-      // free(expr1);
-      // free(expr2);
-      index_expr->num_contents = 2;
-
+        ASTNode *expr2 = parse_expression(parser);
+        match_or_error(parser, TKN_PN_CLOSEBRACKET, "Expected ']' after expression for index expression into matrix.");
+        index_expr->contents = calloc(2, sizeof(ASTNode));
+        index_expr->contents[0] = *expr1;
+        index_expr->contents[1] = *expr2;
+        index_expr->num_contents = 2;
+      }
       return index_expr;
     }
     else
@@ -660,6 +683,7 @@ ASTNode *parse_atomic(Parser *parser)
   return NULL;
 }
 
+// Returns the return type of a function call given its contents
 ResultType get_func_call_result_type(Parser *parser, TokenType func_tok, ASTNode *contents)
 {
   ResultType result_type = {.var_type = TYPE_SCALAR, .height = 1, .width = 1};
@@ -700,6 +724,7 @@ ResultType get_func_call_result_type(Parser *parser, TokenType func_tok, ASTNode
   return result_type;
 }
 
+// Returns the resulting type of an operator (*, -, +)
 ResultType get_operation_result_type(Parser *parser, OperatorType op_type, ResultType lhs, ResultType rhs)
 {
   ResultType result_type = {.var_type = TYPE_SCALAR, .height = 1, .width = 1};
@@ -763,6 +788,7 @@ ResultType get_operation_result_type(Parser *parser, OperatorType op_type, Resul
   return result_type;
 }
 
+// Parses an assignment destination
 // Returns EXP_INDEX or EXP_IDENT
 ASTNode *parse_assignment_dest(Parser *parser)
 {
@@ -824,6 +850,8 @@ ASTNode *parse_assignment_dest(Parser *parser)
   }
 }
 
+// Parses a list expression that is *ONLY* used on the rhs of an assignment
+// Returns EXP_LIST
 ASTNode *parse_list_expression(Parser *parser, ResultType type)
 {
   ASTNode *list_node = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
@@ -869,12 +897,14 @@ ASTNode *parse_list_expression(Parser *parser, ResultType type)
   return list_node;
 }
 
+// Appends a child node to the contents of an ASTNode
 void add_child(ASTNode *parent, ASTNode child)
 {
   parent->contents[parent->num_contents] = child;
   parent->num_contents++;
 }
 
+// Returns the expected argument count of a function (given its token)
 int get_arg_count(TokenType type)
 {
   switch (type)
@@ -890,6 +920,7 @@ int get_arg_count(TokenType type)
   }
 }
 
+// Returns the operation type of an operation (given its token)
 OperatorType get_op_type(TokenType type)
 {
   switch (type)
@@ -905,6 +936,8 @@ OperatorType get_op_type(TokenType type)
   }
 }
 
+// Prematurely exits the parser with the line number
+// (also prints error message if ERR_DETAIL is 1)
 static void parser_exit_with_error(Parser *parser, char *message)
 {
   if (SUPPRESS_ALL_ERRS)

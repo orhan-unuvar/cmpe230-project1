@@ -5,14 +5,16 @@
 #include "defs.h"
 #include "scanner.h"
 
-void scanner_init(Scanner *scanner, char *contents, int line_num)
+// Initializes a scanner with the given contents
+void scanner_init(Scanner *scanner, char *contents)
 {
   scanner->contents = contents;
-  scanner->line_num = line_num;
+  scanner->line_num = 1;
   scanner->pos = 0;
   scanner->len = strlen(contents);
 }
 
+// Goes one character forward
 static char advance_chr(Scanner *scanner)
 {
   scanner->pos++;
@@ -24,6 +26,7 @@ static char advance_chr(Scanner *scanner)
   return c;
 }
 
+// Goes one character back
 static void go_back_chr(Scanner *scanner)
 {
   if (scanner->pos == 0)
@@ -33,24 +36,7 @@ static void go_back_chr(Scanner *scanner)
   scanner->pos--;
 }
 
-static char peek_chr(Scanner *scanner)
-{
-  if (scanner->pos >= scanner->len)
-  {
-    return '\0';
-  }
-  return scanner->contents[scanner->pos];
-}
-
-static char peek_next_chr(Scanner *scanner)
-{
-  if (scanner->pos + 1 >= scanner->len)
-  {
-    return '\0';
-  }
-  return scanner->contents[scanner->pos + 1];
-}
-
+// Returns the previous character
 static char peek_prev_chr(Scanner *scanner)
 {
   if (scanner->pos - 1 < 0)
@@ -60,20 +46,8 @@ static char peek_prev_chr(Scanner *scanner)
   return scanner->contents[scanner->pos - 1];
 }
 
-static int match_chr(Scanner *scanner, char c)
-{
-  if (scanner->pos >= scanner->len)
-  {
-    return 0;
-  }
-  if (scanner->contents[scanner->pos] == c)
-  {
-    scanner->pos++;
-    return 1;
-  }
-  return 0;
-}
-
+// Receives a filename and scans the file for tokens
+// The returned Token array is terminated by a TKN_EOF token
 Token *get_tokens_from_file(char *filename)
 {
   FILE *fp;
@@ -103,16 +77,16 @@ Token *get_tokens_from_file(char *filename)
 }
 
 // Scan tokens from a string.
-// Returns a scanner with null if there is an error.
 Scanner *scan_str(char *str)
 {
   Scanner *scanner = calloc(1, sizeof(Scanner));
-  scanner_init(scanner, str, 1);
+  scanner_init(scanner, str);
   scanner->scanned_tokens = get_tokens_with_scanner(scanner);
 
   return scanner;
 }
 
+// Gets all tokens until EOF
 Token *get_tokens_with_scanner(Scanner *scanner)
 {
   Token *tokens = calloc(strlen(scanner->contents), sizeof(Token));
@@ -139,6 +113,7 @@ Token *get_tokens_with_scanner(Scanner *scanner)
   return tokens;
 }
 
+// Gets one token
 Token *get_token_from_scanner(Scanner *scanner)
 {
   char c = advance_chr(scanner);
@@ -215,6 +190,8 @@ Token *get_token_from_scanner(Scanner *scanner)
   }
 }
 
+// Reads a C-identifier string and returns an identifier
+// or a keyword token
 Token *get_identifier_or_keyword_from_scanner(Scanner *scanner)
 {
   char ident[LINE_LIMIT];
@@ -232,54 +209,15 @@ Token *get_identifier_or_keyword_from_scanner(Scanner *scanner)
   go_back_chr(scanner);
   ident[i] = '\0';
 
-  if (is_keyword(ident))
+  TokenType type;
+  if ((type = get_keyword_token(ident)) != TKN_UNKNOWN)
   {
-    TokenType type;
-    if (strcmp(ident, "scalar") == 0)
-    {
-      type = TKN_TYPE_SCALAR;
-    }
-    if (strcmp(ident, "vector") == 0)
-    {
-      type = TKN_TYPE_VECTOR;
-    }
-    if (strcmp(ident, "matrix") == 0)
-    {
-      type = TKN_TYPE_MATRIX;
-    }
-    if (strcmp(ident, "for") == 0)
-    {
-      type = TKN_KW_FOR;
-    }
-    if (strcmp(ident, "in") == 0)
-    {
-      type = TKN_KW_IN;
-    }
-    if (strcmp(ident, "print") == 0)
-    {
-      type = TKN_SPECIAL_PRINT;
-    }
-    if (strcmp(ident, "printsep") == 0)
-    {
-      type = TKN_SPECIAL_PRINTSEP;
-    }
-    if (strcmp(ident, "tr") == 0)
-    {
-      type = TKN_FUNCTION_TR;
-    }
-    if (strcmp(ident, "choose") == 0)
-    {
-      type = TKN_FUNCTION_CHOOSE;
-    }
-    if (strcmp(ident, "sqrt") == 0)
-    {
-      type = TKN_FUNCTION_SQRT;
-    }
     return new_token(type, strdup(ident), scanner->line_num);
   }
   return new_token(TKN_IDENT, strdup(ident), scanner->line_num);
 }
 
+// Reads a number literal and returns a literal token
 Token *get_number_from_scanner(Scanner *scanner)
 {
   char number[LINE_LIMIT];
@@ -319,6 +257,7 @@ Token *get_number_from_scanner(Scanner *scanner)
   return new_token(is_float ? TKN_FLOAT_LITERAL : TKN_INT_LITERAL, strdup(number), scanner->line_num);
 }
 
+// Reads an operator and returns the correct operator Token
 Token *get_operator_from_scanner(Scanner *scanner)
 {
   char c = peek_prev_chr(scanner);
@@ -341,6 +280,7 @@ Token *get_operator_from_scanner(Scanner *scanner)
   return new_token(type, strdup(op), scanner->line_num);
 }
 
+// Checks whether a character is a valid operator
 int is_operator(char a)
 {
   switch (a)
@@ -354,20 +294,27 @@ int is_operator(char a)
   }
 }
 
+// Used in conjunction with KEYWORDS to check whether a string is a keyword
+// and if so, return the corresponding TokenType
+static const TokenType KEYWORD_TYPES[] = {TKN_KW_FOR, TKN_KW_IN, TKN_TYPE_SCALAR, TKN_TYPE_VECTOR, TKN_TYPE_MATRIX, TKN_SPECIAL_PRINT, TKN_SPECIAL_PRINTSEP, TKN_FUNCTION_TR, TKN_FUNCTION_CHOOSE, TKN_FUNCTION_SQRT};
+
 static const char *KEYWORDS[] = {"for", "in", "scalar", "vector", "matrix", "print", "printsep", "tr", "choose", "sqrt"};
 
-int is_keyword(char *a)
+// Returns the corresponding TokenType for a keyword or
+// TKN_UNKNOWN if it's not a keyword
+TokenType get_keyword_token(char *a)
 {
   for (int i = 0; i < sizeof(KEYWORDS) / sizeof(char *); i++)
   {
     if (strcmp(a, KEYWORDS[i]) == 0)
     {
-      return 1;
+      return KEYWORD_TYPES[i];
     }
   }
-  return 0;
+  return TKN_UNKNOWN;
 }
 
+// Exits the program due to a scanner error
 static void scanner_exit_with_error(Scanner *scanner, char *error_msg)
 {
   if (SUPPRESS_ALL_ERRS)

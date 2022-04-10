@@ -105,7 +105,7 @@ void parse_challenge_4()
   assert(is_decl_with_type_and_name(&cts[0], (ResultType){.var_type = TYPE_MATRIX, .width = 2, .height = 3}, "A"));
 
   assert(cts[1].type == AST_STMT);
-  assert(cts[1].stmt_type == STMT_ASSIGNMENT);
+  assert(cts[1].stmt_type == STMT_ASSN);
   assert(cts[1].lhs->type == AST_EXPR);
   assert(cts[1].lhs->exp_type == EXP_IDENT);
   assert(strcmp(cts[1].lhs->ident, "A") == 0);
@@ -156,7 +156,7 @@ void parse_challenge_5()
   assert(is_list_assignment(&cts[6], "x", expected_contents));
 
   assert(cts[8].type == AST_STMT);
-  assert(cts[8].stmt_type == STMT_PRINT_STMT);
+  assert(cts[8].stmt_type == STMT_PRINT);
   assert(is_expr_with_result_type(cts[8].contents, (ResultType){.var_type = TYPE_SCALAR, .height = 1, .width = 1}));
 }
 
@@ -186,7 +186,6 @@ void parse_challenge_6()
 
   ASTNode *root = parse_return_root(challenge);
   ASTNode *cts = root->contents;
-  // TODO: add checking
 }
 void parse_challenge_7()
 {
@@ -208,7 +207,6 @@ void parse_challenge_7()
   ";
   ASTNode *root = parse_return_root(challenge);
   ASTNode *cts = root->contents;
-  // TODO: add checking
 }
 void parse_challenge_8()
 {
@@ -341,7 +339,7 @@ int is_decl_with_type_and_name(ASTNode *node, ResultType type, char *name)
 }
 int is_list_assignment(ASTNode *node, char *destination_ident, char **expected_contents)
 {
-  int is_list_type = node->stmt_type == STMT_ASSIGNMENT && node->lhs->type == AST_EXPR && node->rhs->type == AST_EXPR && node->rhs->exp_type == EXP_LIST;
+  int is_list_type = node->stmt_type == STMT_ASSN && node->lhs->type == AST_EXPR && node->rhs->type == AST_EXPR && node->rhs->exp_type == EXP_LIST;
   if (!is_list_type)
     return 0;
   if (strcmp(node->lhs->ident, destination_ident) != 0)

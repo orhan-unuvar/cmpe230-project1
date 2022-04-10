@@ -16,8 +16,8 @@ typedef enum StatementType
   // Only allowed in the global scope
   STMT_DECL,
   // lhs -> AST_ASSIGNMENT_DEST, rhs->AST_EXPR
-  STMT_ASSIGNMENT,
-  STMT_PRINT_STMT
+  STMT_ASSN,
+  STMT_PRINT
 } StatementType;
 
 typedef enum ExpressionType
@@ -53,7 +53,7 @@ typedef struct ASTNode
 
   StatementType stmt_type;
 
-  // AST_DECL
+  // STMT_DECL
   char *var_name;
   ResultType var_type;
 
@@ -69,7 +69,7 @@ typedef struct ASTNode
   // EXP_BINOP
   OperatorType op_type;
 
-  // EXP_BINOP || STMT_ASSIGNMENT
+  // EXP_BINOP || STMT_ASSN
   struct ASTNode *lhs;
   struct ASTNode *rhs;
 
@@ -101,8 +101,7 @@ typedef struct Parser
   Token *tokens;
   int token_idx;
   int is_accepting_declarations;
-  ParseTree *
-      parse_tree;
+  ParseTree *parse_tree;
 } Parser;
 
 ASTNode *new_ast_node(ASTNodeType type, int line_number);

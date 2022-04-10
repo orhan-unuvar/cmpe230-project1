@@ -1,7 +1,0 @@
-matrix a[1,1]
-scalar b
-
-b = choose (a, 1, 1, 1)
-b= choose (1, a, 1, 1)
-b = choose (1, 1, a, 1)
-b= choose (1, 1, 1, a)

@@ -39,11 +39,11 @@ void gen(Generator *generator, char *str)
 {
 
     int len = strlen(str);
-    if (len + generator->length + 1 > generator->capacity)
+    while (len + generator->length + 1 > generator->capacity)
     {
         generator->capacity *= 2;
-        generator->code_string = realloc(generator->code_string, generator->capacity);
     }
+    generator->code_string = realloc(generator->code_string, generator->capacity);
     generator->length += len;
     strcat(generator->code_string, str);
 }
@@ -55,10 +55,10 @@ void generate_statement(Generator *generator, ASTNode *node)
     case STMT_DECL:
         generate_declaration_stmt(generator, node);
         break;
-    case STMT_ASSIGNMENT:
+    case STMT_ASSN:
         generate_assignment_stmt(generator, node);
         break;
-    case STMT_PRINT_STMT:
+    case STMT_PRINT:
         generate_print_stmt(generator, node);
         break;
     }
@@ -72,17 +72,7 @@ void generate_declaration_stmt(Generator *generator, ASTNode *node)
         generate_identifier(generator, node->var_name);
         gen(generator, "= 0;");
     }
-    else if (node->var_type.var_type == TYPE_VECTOR)
-    {
-        gen(generator, "double **");
-        generate_identifier(generator, node->var_name);
-        gen(generator, " = allocate_matrix(");
-        gen(generator, get_str(node->var_type.height));
-        gen(generator, ", ");
-        gen(generator, get_str(node->var_type.width));
-        gen(generator, ");");
-    }
-    else if (node->var_type.var_type == TYPE_MATRIX)
+    else
     {
         gen(generator, "double **");
         generate_identifier(generator, node->var_name);
@@ -148,7 +138,6 @@ void generate_assignment_dest(Generator *generator, ASTNode *node)
         gen(generator, "[get_int(");
         generate_expression(generator, node->contents);
         gen(generator, ") - 1]");
-        // TODO: this is wrong! for vectors we need the second index to be 0.
         if (node->num_contents == 2)
         {
             gen(generator, "[get_int(");
