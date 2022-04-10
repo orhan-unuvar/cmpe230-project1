@@ -165,11 +165,15 @@ define PARSE_ATOMIC
             if next token is not TOKEN_CLOSE_BRACKET
                 exit with error message
         else return NODE_ID from t
+    else if next token t is TOKEN_NUM
+        return NODE_NUM from t
     else if next token is TOKEN_FUNC_CALL
     ...
+    else //meaningless expression
+        exit with error message
 </pre>
 
-As you can see, the precedence is handled by the layerization of precedence levels with different functions. Whenever the parse enters a place where it expects a sequence of tokens that make up a meaningful expression, it recursively descends into first a sum expression, then a product expression, and finally an atomic expression
+As you can see, the precedence is handled by the layerization of precedence levels with different functions. Whenever the parse enters a place where it expects a sequence of tokens that make up a meaningful expression, it recursively descends into first a sum expression, then a product expression, and finally an atomic expression (which can be either a parenthesized arbitrary expression, an indexing expression, a single identifier expression, a single numeral expression, or a function call expression). The whole expression may be only an atomic expression, or a bunch of products of atomic expressions, or even a bunch of sums of products of atomic expressions! Associativity is also easy,
 
 ### Code Generator
 
