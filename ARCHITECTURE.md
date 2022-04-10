@@ -16,12 +16,10 @@ When ML2C starts running on a given .mat file input, the scanner _scans_ the cha
 
 The first major component of ML2C, the scanner, simply does a linear traversal of the input MatLang source code and forms tokens out of the characters according to the lexical grammar of the MatLang language. An example of this for integer and float numerals:
 
-    let ch be the next character
-    if ch is a digit
+    define SCAN_NUMERAL
         let tk be a new token
-        while ch is a digit
+        while the next character ch is a digit
             add ch to tk
-            let ch be the next character
         if ch is '.'
             add ch to tk
             let ch be the next character
@@ -32,7 +30,6 @@ The first major component of ML2C, the scanner, simply does a linear traversal o
                 let ch be the next character
         label tk as TOKEN_NUMERAL
         return tk
-    ...
 
 An important point is that the scanner holds a list of all the keywords of the MatLang language, such as `for`, `vector`, and `printsep`, so whenever it comes across these words in the input, it labels the created token accordingly.
 
@@ -41,8 +38,10 @@ The scanner is implemented with a struct appropriately called `Scanner`, that is
 Some important functions from `scanner.c` are the following:
 
 1. get_tokens_from_file
-2. get_tokens_from_scanner
-3. get_token_with_scanner
+1. get_tokens_from_scanner
+1. get_token_with_scanner
+
+The function named `get_tokens_from_scanner()` linearly traverses the source code string `contents` and calls functions that look like the function in the pseudocode above.
 
 ## Parser
 

@@ -140,6 +140,7 @@ Token *get_token_from_scanner(Scanner *scanner)
     switch (c)
     {
     case ' ':
+    case '\t':
       break;
     case '\n':
       return new_token(TKN_LINE_FEED, strdup("\n"), scanner->line_num);

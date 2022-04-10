@@ -16,25 +16,27 @@ Generator *new_generator(ParseTree *tree)
 
     return generator;
 }
-//
+// Creates a new target code string pointed by the generator.
+// This function is called in the main generate_code_string function.
 void generate_new_code_string(Generator *generator)
 {
     gen(generator, preamble);
     gen(generator, "#include <stdio.h>\n\nint main()\n{\n");
 }
-
+// Generates an identifier in the target code string.
 void generate_identifier(Generator *generator, char *str)
 {
     gen(generator, str);
 }
-
+// Returns the string version of an integer.
 char *get_str(int val)
 {
     char *str = malloc(LINE_LIMIT * sizeof(char));
     sprintf(str, "%d", val);
     return str;
 }
-
+// Generates an arbitrary string in the target code string.
+// This function is called in almost all of the generating functions.
 void gen(Generator *generator, char *str)
 {
 
@@ -47,7 +49,8 @@ void gen(Generator *generator, char *str)
     generator->length += len;
     strcat(generator->code_string, str);
 }
-
+// Generates an arbitrary statement in the target code string.
+// This function calls the other statement type generating functions.
 void generate_statement(Generator *generator, ASTNode *node)
 {
     switch (node->stmt_type)
@@ -63,14 +66,14 @@ void generate_statement(Generator *generator, ASTNode *node)
         break;
     }
 }
-
+// Generates a declaration statement in the target code string.
 void generate_declaration_stmt(Generator *generator, ASTNode *node)
 {
     if (node->var_type.var_type == TYPE_SCALAR)
     {
         gen(generator, "double ");
         generate_identifier(generator, node->var_name);
-        gen(generator, "= 0;");
+        gen(generator, " = 0;");
     }
     else
     {
@@ -83,7 +86,7 @@ void generate_declaration_stmt(Generator *generator, ASTNode *node)
         gen(generator, ");");
     }
 }
-
+// Generates an assignment statement in the target code string.
 void generate_assignment_stmt(Generator *generator, ASTNode *node)
 {
     if (node->rhs->exp_type == EXP_LIST)
@@ -129,7 +132,8 @@ void generate_assignment_stmt(Generator *generator, ASTNode *node)
     }
     gen(generator, ";");
 }
-
+// Generates an assignment destination in the target code string.
+// That is either an identifier or an indexing expression.
 void generate_assignment_dest(Generator *generator, ASTNode *node)
 {
     generate_identifier(generator, node->ident);
@@ -150,7 +154,7 @@ void generate_assignment_dest(Generator *generator, ASTNode *node)
         }
     }
 }
-
+// Generates a print statement in the target code string.
 void generate_print_stmt(Generator *generator, ASTNode *node)
 {
     if (node->num_contents == 0)
@@ -183,7 +187,8 @@ void generate_print_stmt(Generator *generator, ASTNode *node)
     }
     gen(generator, ");");
 }
-
+// Generates an expression in the target code string.
+// This function is called wherever an expression can appear in the translated programs.
 void generate_expression(Generator *generator, ASTNode *node)
 {
     switch (node->exp_type)
@@ -292,7 +297,8 @@ void generate_expression(Generator *generator, ASTNode *node)
         break;
     }
 }
-
+// Generates a for loop in the target code string.
+// This function calls the generate_statement function for each substatement in the loop.
 void generate_for_loop(Generator *generator, ASTNode *node)
 {
     gen(generator, "\t");
@@ -302,7 +308,7 @@ void generate_for_loop(Generator *generator, ASTNode *node)
     {
         gen(generator, "\t\t");
         generate_for_clause(generator, node->for_clause_2);
-        gen(generator, "\n{\n");
+        gen(generator, "\n\t\t{\n");
     }
     for (int i = 0; i < node->num_contents; i++)
     {
@@ -320,7 +326,8 @@ void generate_for_loop(Generator *generator, ASTNode *node)
     }
     gen(generator, "\t}\n");
 }
-
+// Generates a for clause in the target code string.
+// This function is called in the generate_for_loop function.
 void generate_for_clause(Generator *generator, ForLoopClause *for_clause)
 {
     char *var_name = for_clause->var->name;
@@ -339,7 +346,7 @@ void generate_for_clause(Generator *generator, ForLoopClause *for_clause)
     generate_expression(generator, for_clause->expr3);
     gen(generator, ")");
 }
-
+// Generates a matrix addition or subtraction in the target code string.
 void generate_mat_add_sub(Generator *generator, ASTNode *mat1, ASTNode *mat2, char *func_name)
 {
     gen(generator, func_name);
@@ -353,14 +360,14 @@ void generate_mat_add_sub(Generator *generator, ASTNode *mat1, ASTNode *mat2, ch
     gen(generator, get_str(mat1->exp_result_type.width));
     gen(generator, ")");
 }
-
+// Generates an ordinary (scalar) addition, subtraction or multiplication in the target code string.
 void generate_ord_op(Generator *generator, ASTNode *sca1, ASTNode *sca2, char *chr)
 {
     generate_expression(generator, sca1);
     gen(generator, chr);
     generate_expression(generator, sca2);
 }
-
+// Generates a matrix multiplication in the target code string.
 void generate_mat_mul(Generator *generator, ASTNode *mat1, ASTNode *mat2)
 {
     gen(generator, "mat_mul(");
@@ -377,7 +384,7 @@ void generate_mat_mul(Generator *generator, ASTNode *mat1, ASTNode *mat2)
     gen(generator, get_str(mat2->exp_result_type.width));
     gen(generator, ")");
 }
-
+// Generates a scalar multiplication (scalar * matrix or matrix * scalar) in the target code string.
 void generate_sca_mul(Generator *generator, ASTNode *mat, ASTNode *sca)
 {
     gen(generator, "mat_sca_mul(");
@@ -390,7 +397,7 @@ void generate_sca_mul(Generator *generator, ASTNode *mat, ASTNode *sca)
     generate_expression(generator, sca);
     gen(generator, ")");
 }
-
+// The main function that starts generating the target code string.
 void generate_code_string(Generator *generator)
 {
     generate_new_code_string(generator);
