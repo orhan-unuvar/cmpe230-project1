@@ -1,0 +1,4 @@
+scalar t
+print(t)
+vector y[9]
+print(y)

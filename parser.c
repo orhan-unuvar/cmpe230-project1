@@ -205,6 +205,12 @@ ASTNode *parse_for_loop_statement(Parser *parser)
     snprintf(error_msg, 100, "Variable '%s' not declared in 'for' loop expression.", ident1);
     parser_exit_with_error(parser, error_msg);
   }
+  if (var1->type.var_type != TYPE_SCALAR)
+  {
+    char error_msg[100];
+    snprintf(error_msg, 100, "Expected variable '%s' in 'for' loop expression to be scalar", ident1);
+    parser_exit_with_error(parser, error_msg);
+  }
 
   if (match(parser, TKN_PN_COMMA))
   {
@@ -216,6 +222,12 @@ ASTNode *parse_for_loop_statement(Parser *parser)
     {
       char error_msg[100];
       snprintf(error_msg, 100, "Variable '%s' not declared in 'for' loop expression.", ident1);
+      parser_exit_with_error(parser, error_msg);
+    }
+    if (var2->type.var_type != TYPE_SCALAR)
+    {
+      char error_msg[100];
+      snprintf(error_msg, 100, "Expected variable '%s' in 'for' loop expression to be scalar", ident2);
       parser_exit_with_error(parser, error_msg);
     }
 
@@ -290,14 +302,15 @@ ASTNode *parse_for_loop_statement(Parser *parser)
   {
     parser_exit_with_error(parser, "Expected ':' or 'in' after identifier in 'for' loop expression.");
   }
-  match_lf_eof_or_error(parser, "Expected '\n' after for statement."); //is eof valid here???
+  match_lf_eof_or_error(parser, "Expected '\n' after for statement."); // is eof valid here???
   while (get_curr(parser)->type != TKN_PN_CLOSEBRACE && !is_eof(parser))
   {
+    skip_newlines(parser);
+
     ASTNode *statement = parse_statement(parser);
-    if (statement != NULL) //how can this be ever null?
-    {
-      add_child(node, *statement);
-    }
+    add_child(node, *statement);
+
+    skip_newlines(parser);
   }
   match_or_error(parser, TKN_PN_CLOSEBRACE, "Expected '}' after for statement.");
   return node;
@@ -382,7 +395,7 @@ ASTNode *parse_assignment(Parser *parser)
     if (lhs->exp_type == EXP_INDEX)
     {
       if (rhs->exp_result_type.var_type != TYPE_SCALAR)
-        parser_exit_with_error(parser, "Type mismatch in assignment.");
+        parser_exit_with_error(parser, "Type mismatch in assignment, expected scalar to be assigned to an index expression.");
     }
     else if ((variable_type.var_type == TYPE_SCALAR ^ rhs->exp_result_type.var_type == TYPE_SCALAR) || variable_type.height != rhs->exp_result_type.height || variable_type.width != rhs->exp_result_type.width)
     {
@@ -517,7 +530,7 @@ ASTNode *parse_factor(Parser *parser)
   {
     Token *op = peek_prev(parser);
     OperatorType type = get_op_type(op->type);
-    ASTNode *rhs = parse_factor(parser); //shouldn't this be parse_atomic?
+    ASTNode *rhs = parse_atomic(parser); // shouldn't this be parse_atomic?
     ASTNode *parent = new_ast_node(AST_EXPR, get_curr(parser)->line_num);
 
     parent->exp_type = EXP_BINOP;
@@ -525,7 +538,7 @@ ASTNode *parse_factor(Parser *parser)
     parent->lhs = expr;
     parent->rhs = rhs;
     parent->exp_result_type = get_operation_result_type(parser, type, parent->lhs->exp_result_type, parent->rhs->exp_result_type);
-    expr = parent; //what is this?
+    expr = parent; // what is this?
   }
 
   return expr;
@@ -777,7 +790,7 @@ ASTNode *parse_assignment_dest(Parser *parser)
     ASTNode *index1 = parse_expression(parser);
     if (index1->exp_result_type.var_type != TYPE_SCALAR)
     {
-      parser_exit_with_error(parser, "Expected a scalar for indexing.");
+      parser_exit_with_error(parser, "Expected the index to be scalar.");
     }
 
     if (var->type.var_type == TYPE_VECTOR)

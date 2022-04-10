@@ -1,0 +1,4 @@
+matrix a[1,1]
+scalar c
+choose(a,a,a,a)
+a*a
