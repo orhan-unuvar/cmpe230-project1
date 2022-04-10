@@ -26,6 +26,7 @@ void generate_new_code_string(Generator *generator)
 // Generates an identifier in the target code string.
 void generate_identifier(Generator *generator, char *str)
 {
+    gen(generator, "_");
     gen(generator, str);
 }
 // Returns the string version of an integer.
@@ -336,11 +337,11 @@ void generate_for_clause(Generator *generator, ForLoopClause *for_clause)
     gen(generator, " = ");
     generate_expression(generator, for_clause->expr1);
     gen(generator, "; ");
-    gen(generator, "get_int(");
+    gen(generator, "(");
     generate_identifier(generator, var_name);
-    gen(generator, ") <= get_int(");
+    gen(generator, ") - (");
     generate_expression(generator, for_clause->expr2);
-    gen(generator, "); ");
+    gen(generator, ") <= +EPSILON; ");
     generate_identifier(generator, var_name);
     gen(generator, " += ");
     generate_expression(generator, for_clause->expr3);

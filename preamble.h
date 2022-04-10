@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#define ___EPSILON 0.000000001
+#define EPSILON 0.000000001
 
 double **allocate_matrix(int size_1, int size_2)
 {
@@ -100,7 +100,7 @@ double **tr(double **mat, int h, int w)
 
 double choose(double expr1, double expr2, double expr3, double expr4)
 {
-  if (fabs(expr1) < ___EPSILON)
+  if (fabs(expr1) < EPSILON)
   {
     return expr2;
   }
@@ -116,7 +116,7 @@ double choose(double expr1, double expr2, double expr3, double expr4)
 }
 void print_num(double number)
 {
-  if (fabs(number - round(number)) < ___EPSILON)
+  if (fabs(number - round(number)) < EPSILON)
   {
     printf("%d", (int)round(number));
   }

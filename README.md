@@ -42,6 +42,12 @@ Example command:
 gcc prog.c -lm -o prog
 ```
 
+## Running Tests
+
+To run the tests:
+
+    make test
+
 ## Next Steps
 
 The docs don't end here. We have docpages explaining our testing suite and the
